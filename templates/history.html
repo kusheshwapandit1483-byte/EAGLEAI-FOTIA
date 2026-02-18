@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle AI | History</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=mobile_fix_12">
+
+    <!-- Firebase Config -->
+    <script type="module" src="{{ url_for('static', filename='js/firebase_config.js') }}"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="brand-logo">
+                <h1>EAGLEAI<span class="brand-subtitle">FOTIA</span></h1>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}"><span class="material-icons-round">dashboard</span> Dashboard</a>
+                </li>
+                <li><a href="{{ url_for('pumps') }}"><span class="material-icons-round">water_drop</span> Pump
+                        Status</a></li>
+                <li><a href="{{ url_for('alarms') }}"><span class="material-icons-round">notifications_active</span>
+                        System Alerts</a></li>
+                <li><a href="{{ url_for('analytics') }}"><span class="material-icons-round">analytics</span>
+                        Analytics</a>
+                </li>
+                <li class="active"><a href="#"><span class="material-icons-round">history</span> Event Logs</a>
+                </li>
+                <li><a href="{{ url_for('settings') }}"><span class="material-icons-round">settings</span>
+                        Configuration</a>
+                </li>
+                {% if session.get('role') in ['admin', 'superadmin', 'developer'] %}
+                <li><a href="{{ url_for('admin_users') }}"><span class="material-icons-round">people</span> User
+                        Management</a>
+                </li>
+                {% endif %}
+                <!-- DEVELOPER PANEL LINK -->
+                {% if session.get('role') == 'developer' %}
+                <li><a href="{{ url_for('developer_dashboard') }}"><span class="material-icons-round">code</span>
+                        Developer Panel</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="sidebar-footer">
+                Powered by <strong>AONIX</strong>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Sticky App Bar -->
+            <header class="app-bar">
+                <div class="app-bar-left">
+                    <div class="site-selector desktop-only">
+                        <span class="site-name">{{ session.get('factory_name', 'Select Factory') }}</span>
+                        <span class="material-icons-round"
+                            style="font-size: 1.2em; color: var(--text-tertiary);">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="app-bar-center">
+                    <h2 class="app-title">Event Logs</h2>
+                    <div class="last-update">Detailed History</div>
+                </div>
+
+                <div class="app-bar-right">
+                    <div class="status-group">
+                        <a href="{{ url_for('alarms') }}" style="text-decoration: none; color: inherit;">
+                            <div class="alarm-badge">
+                                <span class="material-icons-round" style="font-size:1.1em;">warning</span> Alerts: <span
+                                    id="alarmCount">0</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="user-profile-container">
+                        <div class="user-mini-profile" onclick="toggleUserDropdown(event)">
+                            <div class="user-mini-info">
+                                <span class="user-mini-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-mini-role">{{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <div class="user-icon-circle">
+                                <span class="material-icons-round">person</span>
+                            </div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-dropdown-header">
+                                <span class="user-dropdown-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-dropdown-username"
+                                    style="display:block; font-size: 0.8em; color: var(--text-secondary);">ID: {{
+                                    session.get('username', '') }}</span>
+                                <span class="user-dropdown-username">Role: {{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <a href="{{ url_for('logout') }}" class="user-dropdown-item text-danger">
+                                <span class="material-icons-round" style="font-size: 20px;">logout</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                    <script>
+                        function toggleUserDropdown(event) {
+                            event.stopPropagation();
+                            const dd = document.getElementById('userDropdown');
+                            dd.classList.toggle('show');
+                        }
+                        window.addEventListener('click', () => {
+                            const dd = document.getElementById('userDropdown');
+                            if (dd) dd.classList.remove('show');
+                        });
+                    </script>
+
+
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+
+                <!-- Enhanced Log Container -->
+                <div class="card card-with-controls">
+
+                    <!-- Control Bar -->
+                    <div class="log-controls">
+                        <!-- Left: Search -->
+                        <div class="search-wrapper">
+                            <span class="material-icons-round search-icon">search</span>
+                            <input type="search" id="logSearch" class="search-input" placeholder="Search logs...">
+                        </div>
+
+                        <!-- Center: Tabs -->
+                        <div class="segmented-control">
+                            <button class="segment-btn active" onclick="filterLogs('all')">All Events</button>
+                            <button class="segment-btn" onclick="filterLogs('ALARM')">Critical</button>
+                            <button class="segment-btn" onclick="filterLogs('STATUS')">Status</button>
+                            <button class="segment-btn" onclick="filterLogs('SYSTEM')">System</button>
+                        </div>
+
+                        <!-- Right: Actions -->
+                        <button class="btn-primary" onclick="exportToCSV()"
+                            style="padding: 8px 16px; font-size: 0.85rem;">
+                            <span class="material-icons-round" style="font-size: 18px;">download</span> Export
+                        </button>
+                    </div>
+
+                    <!-- History Table -->
+                    <!-- Table Area -->
+                    <div style="overflow-x: auto;">
+                        <table class="industrial-table" id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Source</th>
+                                    <th>Event Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody">
+                                <!-- Rows will be injected by JS -->
+                                <tr>
+                                    <td colspan="4" class="loading-text">Loading history data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+                <div id="loader" class="loader-overlay section-only">
+                    <div class="spinner"></div>
+                    <div class="loader-text">Loading...</div>
+                </div>
+            </div> <!-- Close content-wrapper -->
+        </main>
+    </div>
+
+    <!-- BOTTOM NAVIGATION (Mobile Only) -->
+    <nav class="bottom-nav mobile-only">
+        <a href="{{ url_for('index') }}" class="nav-item">
+            <span class="material-icons-round">dashboard</span>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('pumps') }}" class="nav-item">
+            <span class="material-icons-round">water_drop</span>
+            <span>Pumps</span>
+        </a>
+        <a href="{{ url_for('alarms') }}" class="nav-item">
+            <span class="material-icons-round">notifications_active</span>
+            <span>Alerts</span>
+        </a>
+        <a href="{{ url_for('analytics') }}" class="nav-item">
+            <span class="material-icons-round">analytics</span>
+            <span>Stats</span>
+        </a>
+    </nav>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader');
+            if (loader.parentElement) loader.parentElement.style.position = 'relative';
+
+            const links = document.querySelectorAll('.sidebar-nav a, .user-dropdown a, a[href^="/"]');
+
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (e.ctrlKey || e.metaKey || link.target === '_blank' || link.getAttribute('href').startsWith('#')) return;
+                    loader.style.display = 'flex';
+                });
+            });
+        });
+    </script>
+
+    <!-- JS -->
+    <script type="module" src="{{ url_for('static', filename='js/history.js') }}"></script>
+</body>
+
+</html>

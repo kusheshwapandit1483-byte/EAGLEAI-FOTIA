@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle AI | Pump Monitor</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=mobile_fix_12">
+</head>
+
+<body>
+    <div id="loader" class="loader-overlay">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+
+    <!-- System Alert Banner (Restored) -->
+    <div id="systemAlertBanner" class="alert-banner" style="display: none;"></div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="app-container">
+
+        <!-- SIDEBAR -->
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="brand-logo">
+                <h1>EAGLEAI<span class="brand-subtitle">FOTIA</span></h1>
+            </div>
+
+            <ul class="nav-links">
+                <li class="active"><a href="#"><span class="material-icons-round">dashboard</span> Dashboard</a></li>
+                <li><a href="{{ url_for('pumps') }}"><span class="material-icons-round">water_drop</span> Pump
+                        Status</a></li>
+                <li><a href="{{ url_for('alarms') }}"><span class="material-icons-round">notifications_active</span>
+                        System Alerts</a></li>
+                <li><a href="{{ url_for('analytics') }}"><span class="material-icons-round">analytics</span>
+                        Analytics</a>
+                </li>
+                <li><a href="{{ url_for('history') }}"><span class="material-icons-round">history</span> Event Logs</a>
+                </li>
+                <li><a href="{{ url_for('settings') }}"><span class="material-icons-round">settings</span>
+                        Configuration</a>
+                </li>
+                {% if session.get('role') in ['admin', 'superadmin', 'developer'] %}
+                <li><a href="{{ url_for('admin_users') }}"><span class="material-icons-round">people</span> User
+                        Management</a>
+                </li>
+                {% endif %}
+                <!-- DEVELOPER PANEL LINK -->
+                {% if session.get('role') == 'developer' %}
+                <li class="active"><a href="{{ url_for('developer_dashboard') }}"><span
+                            class="material-icons-round">code</span> Developer Panel</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="sidebar-footer">
+                Powered by <strong>AONIX</strong>
+            </div>
+        </nav>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+
+            <!-- Sticky App Bar -->
+            <header class="app-bar">
+                <!-- LEFT: Site & Health -->
+                <div class="app-bar-left">
+                    <div class="site-selector desktop-only">
+                        <span class="site-name">{{ session.get('factory_name', 'Select Factory') }}</span>
+                        <span class="material-icons-round"
+                            style="font-size: 1.2em; color: var(--text-tertiary);">expand_more</span>
+                    </div>
+                    <!-- Mobile: Logo + Brand Name -->
+                    <div class="mobile-brand mobile-only">
+                        <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="mobile-brand-logo">
+                        <div class="mobile-brand-text">
+                            <span class="mobile-brand-name">EAGLE AI</span>
+                            <span class="mobile-brand-sub">FOTIA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CENTER: Title & Update -->
+                <div class="app-bar-center">
+                    <h2 class="app-title">Fire System Dashboard</h2>
+                    <div class="last-update" id="lastUpdated">Updated --:--:--</div>
+                </div>
+
+                <!-- Mobile Center: Last Update + Alerts -->
+                <div class="mobile-center mobile-only">
+                    <div class="mobile-update-time" id="mobileLastUpdated">--:--:--</div>
+                    <a href="{{ url_for('alarms') }}" style="text-decoration: none;">
+                        <div class="alarm-badge mobile-alarm-badge">
+                            <span class="material-icons-round">warning</span>
+                            <span id="mobileAlarmCount">0</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Mobile Right: User Icon -->
+                <div class="mobile-user mobile-only" onclick="toggleUserDropdown(event)">
+                    <div class="mobile-user-icon">
+                        <span class="material-icons-round">person</span>
+                    </div>
+                    <div class="user-dropdown" id="mobileUserDropdown">
+                        <div class="user-dropdown-header">
+                            <span class="user-dropdown-name">{{ session.get('name', session.get('username', 'User')) }}</span>
+                            <span style="display:block; font-size: 0.8em; color: var(--text-secondary);">{{ session.get('role', 'Role') }}</span>
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="user-dropdown-item text-danger">
+                            <span class="material-icons-round" style="font-size: 20px;">logout</span>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Utils & User (Desktop) -->
+                <div class="app-bar-right desktop-only">
+                    <div class="status-group">
+                        <a href="{{ url_for('alarms') }}" style="text-decoration: none; display: block;">
+                            <div class="alarm-badge">
+                                <span class="material-icons-round" style="font-size:1.1em;">warning</span> Alerts: <span
+                                    id="alarmCount">0</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="user-profile-container">
+                        <div class="user-mini-profile" onclick="toggleUserDropdown(event)">
+                            <div class="user-mini-info">
+                                <span class="user-mini-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-mini-role">{{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <div class="user-icon-circle">
+                                <span class="material-icons-round">person</span>
+                            </div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-dropdown-header">
+                                <span class="user-dropdown-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-dropdown-username"
+                                    style="display:block; font-size: 0.8em; color: var(--text-secondary);">ID: {{
+                                    session.get('username', '') }}</span>
+                                <span class="user-dropdown-username">Role: {{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <a href="{{ url_for('logout') }}" class="user-dropdown-item text-danger">
+                                <span class="material-icons-round" style="font-size: 20px;">logout</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User dropdown script (outside desktop-only so it works on mobile too) -->
+                <script>
+                    function toggleUserDropdown(event) {
+                        event.stopPropagation();
+                        const dd = document.getElementById('userDropdown');
+                        const mdd = document.getElementById('mobileUserDropdown');
+                        if (dd) dd.classList.toggle('show');
+                        if (mdd) mdd.classList.toggle('show');
+                    }
+                    window.addEventListener('click', () => {
+                        const dd = document.getElementById('userDropdown');
+                        const mdd = document.getElementById('mobileUserDropdown');
+                        if (dd) dd.classList.remove('show');
+                        if (mdd) mdd.classList.remove('show');
+                    });
+                </script>
+            </header>
+
+            <div class="grid">
+                <!-- Pressure Card -->
+                <div class="card" id="cardPressure">
+                    <div class="card-header">
+                        <span class="card-title">Pipeline Pressure</span>
+                        <div class="icon-box" style="color: var(--accent-orange);">
+                            <span class="material-icons-round">speed</span>
+                        </div>
+                    </div>
+
+                    <div class="gauge-wrapper">
+                        <div class="gauge-container">
+                            <img src="{{ url_for('static', filename='images/pressure_guage.png') }}" class="gauge-face"
+                                alt="Pressure Gauge">
+                            <div class="gauge-needle" id="pressureNeedle"></div>
+                            <div class="gauge-center-cap"></div>
+                        </div>
+                        <div class="gauge-value-display">
+                            <span id="pressureValue">--</span> <span class="unit">kg/cm²</span>
+                        </div>
+                    </div>
+                    <div id="pressureStatus" class="status-text-centered">Normal Pressure</div>
+                </div>
+
+                <!-- Tank Level Card (Redesigned) -->
+                {% if factory_features.get('water_tank_monitoring', True) %}
+                <div class="card" id="cardTank">
+                    <div class="card-header">
+                        <span class="card-title">Water Tank Level</span>
+                        <div class="icon-box" style="color: var(--accent-blue);">
+                            <span class="material-icons-round">water_drop</span>
+                        </div>
+                    </div>
+
+                    <div class="tank-wrapper">
+                        <div class="tank-visual-container">
+                            <img src="{{ url_for('static', filename='images/Water_tank.png') }}" class="tank-image"
+                                alt="Water Tank">
+                            <!-- Water Level Indicator -->
+                            <!-- We use a container for the liquid that sits behind the tank glass but implies volume -->
+                            <!-- Since we have a static image, we'll overlay a semi-transparent blue bar on top of the sight glass area -->
+                            <div class="water-level-bar" id="tankLevelBar"></div>
+
+                            <!-- Value Overlay -->
+                            <div class="tank-value-overlay">
+                                <span id="tankValue">--</span><span class="unit">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Status Text -->
+                    <div id="tankStatus" class="status-text-centered">
+                        Optimal Level
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Battery Voltage Card -->
+                {% if factory_features.get('battery_monitoring', True) %}
+                <div class="card" id="cardBattery">
+                    <div class="card-header">
+                        <span class="card-title">Battery Voltage</span>
+                        <div class="icon-box" style="color: var(--accent-green);">
+                            <span class="material-icons-round">battery_charging_full</span>
+                        </div>
+                    </div>
+
+                    <div class="battery-visual-container">
+                        <img src="{{ url_for('static', filename='images/Battery.png') }}" class="battery-image"
+                            alt="Battery" style="width: 180px; height: auto;">
+
+                        <!-- Indicators Removed as per request (Solid Battery) -->
+
+                        <!-- Voltage Overlay -->
+                        <div class="battery-value-overlay">
+                            <span id="batteryValue">--</span><span class="unit">V</span>
+                        </div>
+                    </div>
+
+                    <div id="batteryStatus" class="status-text-centered" style="color: var(--text-secondary);">
+                        Normal
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Diesel Level Card -->
+                {% if factory_features.get('diesel_tank_monitoring', True) %}
+                <div class="card" id="cardDieselLevel">
+                    <div class="card-header">
+                        <span class="card-title">Diesel Level</span>
+                        <div class="icon-box" style="color: #f59e0b;">
+                            <span class="material-icons-round">local_gas_station</span>
+                        </div>
+                    </div>
+
+                    <div class="gauge-wrapper">
+                        <div class="gauge-container">
+                            <img src="{{ url_for('static', filename='images/Diesel_tank.png') }}" class="gauge-face"
+                                alt="Diesel Gauge">
+                            <!-- Needle Removed -->
+                            <div class="gauge-center-cap"></div>
+                        </div>
+                        <div class="gauge-value-display">
+                            <span id="dieselLevelValue">--</span> <span class="unit" id="dieselUnit">%</span>
+                        </div>
+                    </div>
+
+                    <div id="dieselStatus" class="status-text-centered">
+                        Normal Level
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <h3 style="margin-bottom: 20px; font-weight: 500; color: var(--text-secondary);">Pump Status</h3>
+            <div class="pump-grid">
+                <!-- Main Pump -->
+                <div class="pump-card" id="cardMain">
+                    <div class="pump-icon-wrapper">
+                        <!-- Replaced generic icon with Premium 3D Asset -->
+                        <img src="{{ url_for('static', filename='images/main_pump_icon.png') }}" class="pump-icon-image"
+                            alt="Main Pump">
+                    </div>
+                    <div class="pump-name-large">Main Pump</div>
+                    <div class="pump-status-text" id="statusTextMain">--</div>
+                </div>
+
+                <!-- Jockey Pump -->
+                <div class="pump-card" id="cardJockey">
+                    <div class="pump-icon-wrapper">
+                        <!-- Replaced generic icon with Premium 3D Asset -->
+                        <img src="{{ url_for('static', filename='images/jockey_pump_icon.png') }}"
+                            class="pump-icon-image" alt="Jockey Pump">
+                    </div>
+                    <div class="pump-name-large">Jockey Pump</div>
+                    <div class="pump-status-text" id="statusTextJockey">--</div>
+                </div>
+
+
+
+                <!-- Diesel Engine -->
+                <div class="pump-card" id="cardDiesel">
+                    <div class="pump-icon-wrapper">
+                        <!-- Replaced generic icon with Premium 3D Asset -->
+                        <img src="{{ url_for('static', filename='images/diesel_pump_icon.png') }}"
+                            class="pump-icon-image" alt="Diesel Engine">
+                    </div>
+                    <div class="pump-name-large">Diesel Engine</div>
+                    <div class="pump-status-text" id="statusTextDiesel">--</div>
+                </div>
+            </div>
+
+
+
+            <div id="loader" class="loader-overlay section-only">
+                <div class="spinner"></div>
+                <div class="loader-text">Loading...</div>
+            </div>
+    </div> <!-- Close content-wrapper -->
+
+    <!-- BOTTOM NAVIGATION (Mobile Only) -->
+    <nav class="bottom-nav mobile-only">
+        <a href="{{ url_for('index') }}" class="nav-item active">
+            <span class="material-icons-round">dashboard</span>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('pumps') }}" class="nav-item">
+            <span class="material-icons-round">water_drop</span>
+            <span>Pumps</span>
+        </a>
+        <a href="{{ url_for('alarms') }}" class="nav-item">
+            <span class="material-icons-round">notifications_active</span>
+            <span>Alerts</span>
+        </a>
+        <a href="{{ url_for('analytics') }}" class="nav-item">
+            <span class="material-icons-round">analytics</span>
+            <span>Stats</span>
+        </a>
+    </nav>
+
+    <script>
+        // Inject Factory DB URL from Server Session
+        window.FACTORY_DB_URL = "{{ session.get('factory_url') }}";
+        console.log("Active Factory DB:", window.FACTORY_DB_URL);
+    </script>
+    <script type="module" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script>
+        // Show loader when clicking specific links
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader');
+            // Ensure parent is relative
+            if (loader.parentElement) loader.parentElement.style.position = 'relative';
+
+            // Target ALL sidebar/nav links for consistent experience
+            const links = document.querySelectorAll('.sidebar-nav a, .user-dropdown a, a[href^="/"]');
+
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    // Don't show if opening in new tab or if it's a hash link
+                    if (e.ctrlKey || e.metaKey || link.target === '_blank' || link.getAttribute('href').startsWith('#')) return;
+
+                    // Show the loader immediately
+                    loader.style.display = 'flex';
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

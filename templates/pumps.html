@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle AI | Pump Operations</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=mobile_fix_12">
+    <style>
+        .pump-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .pump-card-detail {
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .pump-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .pump-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pump-list-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-off {
+            background: #f3f4f6;
+            color: var(--text-tertiary);
+        }
+
+        .status-on {
+            background: #ecfdf5;
+            color: var(--accent-green);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+        }
+
+        .detail-value {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .mode-manual {
+            color: var(--accent-red);
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="brand-logo">
+                <h1>EAGLEAI<span class="brand-subtitle">FOTIA</span></h1>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}"><span class="material-icons-round">dashboard</span> Dashboard</a>
+                </li>
+                <li class="active"><a href="#"><span class="material-icons-round">water_drop</span> Pump Status</a></li>
+                <li><a href="{{ url_for('alarms') }}"><span class="material-icons-round">notifications_active</span>
+                        System Alerts</a></li>
+                <li><a href="{{ url_for('analytics') }}"><span class="material-icons-round">analytics</span>
+                        Analytics</a></li>
+                <li><a href="{{ url_for('history') }}"><span class="material-icons-round">history</span> Event Logs</a>
+                </li>
+                <li><a href="{{ url_for('settings') }}"><span class="material-icons-round">settings</span>
+                        Configuration</a></li>
+                {% if session.get('role') in ['admin', 'superadmin', 'developer'] %}
+                <li><a href="{{ url_for('admin_users') }}"><span class="material-icons-round">people</span> User
+                        Management</a></li>
+                {% endif %}
+                <!-- DEVELOPER PANEL LINK -->
+                {% if session.get('role') == 'developer' %}
+                <li><a href="{{ url_for('developer_dashboard') }}"><span class="material-icons-round">code</span>
+                        Developer Panel</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="sidebar-footer">
+                Powered by <strong>AONIX</strong>
+            </div>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="app-bar">
+                <div class="app-bar-left">
+                    <div class="site-selector desktop-only">
+                        <span class="site-name">{{ session.get('factory_name', 'Select Factory') }}</span>
+                        <span class="material-icons-round"
+                            style="font-size: 1.2em; color: var(--text-tertiary);">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="app-bar-center">
+                    <h2 class="app-title">Pump Status</h2>
+                    <div class="last-update" id="lastUpdated">Updated just now</div>
+                </div>
+
+                <div class="app-bar-right">
+                    <div class="status-group">
+                        <a href="{{ url_for('alarms') }}" style="text-decoration: none; display: block;">
+                            <div class="alarm-badge">
+                                <span class="material-icons-round" style="font-size:1.1em;">warning</span> Alerts: <span
+                                    id="alarmCount">0</span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="user-profile-container">
+                        <div class="user-mini-profile" onclick="toggleUserDropdown(event)">
+                            <div class="user-mini-info">
+                                <span class="user-mini-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-mini-role">{{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <div class="user-icon-circle">
+                                <span class="material-icons-round">person</span>
+                            </div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-dropdown-header">
+                                <span class="user-dropdown-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-dropdown-username"
+                                    style="display:block; font-size: 0.8em; color: var(--text-secondary);">ID: {{
+                                    session.get('username', '') }}</span>
+                                <span class="user-dropdown-username">Role: {{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <a href="{{ url_for('logout') }}" class="user-dropdown-item text-danger">
+                                <span class="material-icons-round" style="font-size: 20px;">logout</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                    <script>
+                        function toggleUserDropdown(event) {
+                            event.stopPropagation();
+                            const dd = document.getElementById('userDropdown');
+                            dd.classList.toggle('show');
+                        }
+                        window.addEventListener('click', () => {
+                            const dd = document.getElementById('userDropdown');
+                            if (dd) dd.classList.remove('show');
+                        });
+                    </script>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="pump-grid">
+                    <!-- MAIN PUMP -->
+                    {% if factory_features.get('main_pump_logic', True) %}
+                    <div class="pump-card-detail" id="card-main">
+                        <div class="pump-card-header">
+                            <div class="pump-title">
+                                <img src="{{ url_for('static', filename='images/main_pump_icon.png') }}"
+                                    class="pump-list-icon" alt="Main Pump">
+                                Main Pump
+                            </div>
+                            <div class="status-badge status-off" id="badge-main">OFF</div>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Control Mode</span>
+                            <span class="detail-value" id="mode-main">AUTO</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Current (Amps)</span>
+                            <span class="detail-value" id="amps-main">-- A</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Runtime</span>
+                            <span class="detail-value" id="time-main">0s</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- JOCKEY PUMP -->
+                    {% if factory_features.get('jockey_pump_logic', True) %}
+                    <div class="pump-card-detail" id="card-jockey">
+                        <div class="pump-card-header">
+                            <div class="pump-title">
+                                <img src="{{ url_for('static', filename='images/jockey_pump_icon.png') }}"
+                                    class="pump-list-icon" alt="Jockey Pump">
+                                Jockey Pump
+                            </div>
+                            <div class="status-badge status-off" id="badge-jockey">OFF</div>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Control Mode</span>
+                            <span class="detail-value" id="mode-jockey">AUTO</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Current (Amps)</span>
+                            <span class="detail-value" id="amps-jockey">-- A</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Runtime</span>
+                            <span class="detail-value" id="time-jockey">0s</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+
+
+                    <!-- DIESEL PUMP -->
+                    {% if factory_features.get('diesel_pump_logic', True) %}
+                    <div class="pump-card-detail" id="card-diesel">
+                        <div class="pump-card-header">
+                            <div class="pump-title">
+                                <img src="{{ url_for('static', filename='images/diesel_pump_icon.png') }}"
+                                    class="pump-list-icon" alt="Diesel Engine">
+                                Diesel Engine
+                            </div>
+                            <div class="status-badge status-off" id="badge-diesel">OFF</div>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Control Mode</span>
+                            <span class="detail-value" id="mode-diesel">AUTO</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Current (Amps)</span>
+                            <span class="detail-value" id="amps-diesel">-- A</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Runtime</span>
+                            <span class="detail-value" id="time-diesel">0s</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div id="loader" class="loader-overlay section-only">
+                    <div class="spinner"></div>
+                    <div class="loader-text">Loading...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- BOTTOM NAVIGATION (Mobile Only) -->
+    <nav class="bottom-nav mobile-only">
+        <a href="{{ url_for('index') }}" class="nav-item">
+            <span class="material-icons-round">dashboard</span>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('pumps') }}" class="nav-item active">
+            <span class="material-icons-round">water_drop</span>
+            <span>Pumps</span>
+        </a>
+        <a href="{{ url_for('alarms') }}" class="nav-item">
+            <span class="material-icons-round">notifications_active</span>
+            <span>Alerts</span>
+        </a>
+        <a href="{{ url_for('analytics') }}" class="nav-item">
+            <span class="material-icons-round">analytics</span>
+            <span>Stats</span>
+        </a>
+    </nav>
+
+    <!-- Removed Graph Logic and CDN -->
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader');
+            if (loader.parentElement) loader.parentElement.style.position = 'relative';
+
+            const links = document.querySelectorAll('.sidebar-nav a, .user-dropdown a, a[href^="/"]');
+
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (e.ctrlKey || e.metaKey || link.target === '_blank' || link.getAttribute('href').startsWith('#')) return;
+                    loader.style.display = 'flex';
+                });
+            });
+        });
+    </script>
+
+    <script>
+        async function fetchPumpData() {
+            try {
+                const response = await fetch('/api/live_data');
+                const data = await response.json();
+
+                // Update header time
+                if (data.error) {
+                    document.getElementById('lastUpdated').innerText = "Error: " + data.error;
+                } else if (data.lastUpdated) {
+                    const date = new Date(data.lastUpdated);
+                    document.getElementById('lastUpdated').innerText = "Updated: " + date.toLocaleString();
+                } else {
+                    document.getElementById('lastUpdated').innerText = "Data Unavailable";
+                }
+
+                const pumps = data.pumps || data.Pumps || {};
+
+                updatePump('main', pumps.main || pumps.Main);
+                updatePump('jockey', pumps.jockey || pumps.Jockey);
+
+                updatePump('diesel', pumps.diesel || pumps.Diesel);
+
+                // Update Alarm Count
+                calculateAlarms(data);
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+            }
+        }
+
+        function updatePump(id, data) {
+            if (!data) return;
+
+            // Status Badge
+            const badge = document.getElementById(`badge-${id}`);
+            const isRun = data.status === 'ON';
+            badge.className = isRun ? 'status-badge status-on' : 'status-badge status-off';
+            badge.innerText = isRun ? 'RUNNING' : 'OFF';
+
+            // Mode
+            const modeEl = document.getElementById(`mode-${id}`);
+            const mode = data.mode || 'AUTO';
+            modeEl.innerText = mode;
+            modeEl.className = mode === 'MANUAL' ? 'detail-value mode-manual' : 'detail-value';
+
+            // Amps
+            const ampsEl = document.getElementById(`amps-${id}`);
+            const amps = (data.current !== undefined) ? data.current : ((data.Current !== undefined) ? data.Current : '--');
+            ampsEl.innerText = amps + " A";
+
+            // Runtime
+            const timeEl = document.getElementById(`time-${id}`);
+            const dur = (data.duration !== undefined) ? data.duration : (data.runTime || 0);
+            timeEl.innerText = dur + "s";
+        }
+
+        function calculateAlarms(data) {
+            let count = 0;
+
+            // 1. Pressure < 6
+            if ((parseFloat(data.pressure) || 0) < 6) count++;
+
+            // 2-4. Pumps ON (Check inside data.pumps)
+            const pumps = data.pumps || data.Pumps || {};
+
+            const isRunning = (p) => (p && (p.status === 'ON'));
+
+            if (isRunning(pumps.jockey || pumps.Jockey)) count++;
+            if (isRunning(pumps.main || pumps.Main)) count++;
+
+            if (isRunning(pumps.diesel || pumps.Diesel)) count++;
+
+            // 5. Tank Level < 95
+            const tank = parseFloat(data.waterLevel || data.tank_level || 0);
+            if (tank < 95) count++;
+
+            // 6. Manual Mode (Aggregate)
+            const getMode = (p) => (p && p.mode) ? p.mode : 'AUTO';
+            const jMode = getMode(pumps.jockey || pumps.Jockey);
+            const mMode = getMode(pumps.main || pumps.Main);
+
+            const dMode = getMode(pumps.diesel || pumps.Diesel);
+
+            if (jMode === 'MANUAL' || mMode === 'MANUAL' || dMode === 'MANUAL') {
+                count++;
+            }
+
+            // 7. Diesel Level < 95
+            const diesel = parseFloat(data.dieselLevel || data.diesel_level || 0);
+            if (diesel < 95) count++;
+
+            // 8. Battery Voltage ( < 11.8 or > 14.2 )
+            const batt = parseFloat(data.batteryVoltage || data.battery_voltage || 0);
+            if (batt < 11.8 || batt > 14.2) count++;
+
+            // Update UI
+            const alarmCountEl = document.getElementById('alarmCount');
+            if (alarmCountEl) alarmCountEl.innerText = count;
+        }
+
+        setInterval(fetchPumpData, 2000);
+        fetchPumpData();
+    </script>
+</body>
+
+</html>

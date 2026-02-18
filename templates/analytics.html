@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle AI | Analytics</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=mobile_fix_12">
+
+    <style>
+        /* Specific Styles for Graphs */
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Time Filter Buttons */
+        .filter-group {
+            background: white;
+            border-radius: 12px;
+            padding: 4px;
+            display: inline-flex;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-btn {
+            border: none;
+            background: transparent;
+            padding: 8px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .filter-btn.active {
+            background: var(--text-main);
+            color: white;
+        }
+
+        /* --- LOADING OVERLAY STYLES REMOVED (Using global style.css) --- */
+    </style>
+</head>
+
+<body>
+
+
+
+    <!-- APP CONTAINER -->
+    <div class="app-container">
+
+        <!-- SIDEBAR -->
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="brand-logo">
+                <h1>EAGLEAI<span class="brand-subtitle">FOTIA</span></h1>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}"><span class="material-icons-round">dashboard</span> Dashboard</a>
+                </li>
+                <li><a href="{{ url_for('pumps') }}"><span class="material-icons-round">water_drop</span> Pump
+                        Status</a></li>
+                <li><a href="{{ url_for('alarms') }}"><span class="material-icons-round">notifications_active</span>
+                        System Alerts</a></li>
+                <li class="active"><a href="#"><span class="material-icons-round">analytics</span> Analytics</a></li>
+                <li><a href="{{ url_for('history') }}"><span class="material-icons-round">history</span> Event Logs</a>
+                </li>
+                <li><a href="{{ url_for('settings') }}"><span class="material-icons-round">settings</span>
+                        Configuration</a></li>
+                {% if session.get('role') in ['admin', 'superadmin', 'developer'] %}
+                <li><a href="{{ url_for('admin_users') }}"><span class="material-icons-round">people</span> User
+                        Management</a>
+                </li>
+                {% endif %}
+                <!-- DEVELOPER PANEL LINK -->
+                {% if session.get('role') == 'developer' %}
+                <li><a href="{{ url_for('developer_dashboard') }}"><span class="material-icons-round">code</span>
+                        Developer Panel</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="sidebar-footer">
+                Powered by <strong>AONIX</strong>
+            </div>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- Sticky App Bar -->
+            <header class="app-bar">
+                <div class="app-bar-left">
+                    <div class="site-selector desktop-only">
+                        <span class="site-name">{{ session.get('factory_name', 'Select Factory') }}</span>
+                        <span class="material-icons-round"
+                            style="font-size: 1.2em; color: var(--text-tertiary);">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="app-bar-center">
+                    <h2 class="app-title">Analytics & Trends</h2>
+                    <div class="last-update" id="lastUpdated">Real-time Analysis</div>
+                </div>
+
+                <div class="app-bar-right">
+                    <div class="status-group">
+                        <a href="{{ url_for('alarms') }}" style="text-decoration: none; display: block;">
+                            <div class="alarm-badge">
+                                <span class="material-icons-round" style="font-size:1.1em;">warning</span> Alerts: <span
+                                    id="alarmCount">0</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="user-profile-container">
+                        <div class="user-mini-profile" onclick="toggleUserDropdown(event)">
+                            <div class="user-mini-info">
+                                <span class="user-mini-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-mini-role">{{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <div class="user-icon-circle">
+                                <span class="material-icons-round">person</span>
+                            </div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-dropdown-header">
+                                <span class="user-dropdown-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-dropdown-username"
+                                    style="display:block; font-size: 0.8em; color: var(--text-secondary);">ID: {{
+                                    session.get('username', '') }}</span>
+                                <span class="user-dropdown-username">Role: {{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <a href="{{ url_for('logout') }}" class="user-dropdown-item text-danger">
+                                <span class="material-icons-round" style="font-size: 20px;">logout</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                    <script>
+                        function toggleUserDropdown(event) {
+                            event.stopPropagation();
+                            const dd = document.getElementById('userDropdown');
+                            dd.classList.toggle('show');
+                        }
+                        window.addEventListener('click', () => {
+                            const dd = document.getElementById('userDropdown');
+                            if (dd) dd.classList.remove('show');
+                        });
+                    </script>
+
+
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="analytics-header">
+                    <h3 style="margin: 0;">Live Trends</h3>
+                    <div class="filter-group" style="box-shadow: none; background: transparent;">
+                        <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Last 24 Hours
+                            (Hourly)</span>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span class="material-icons-round" style="color: var(--accent-orange);">speed</span>
+                        Pipeline Pressure (kg/cm²)
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="pressureChart"></canvas>
+                    </div>
+                </div>
+
+                {% if factory_features.get('water_tank_monitoring', True) %}
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span class="material-icons-round" style="color: var(--accent-blue);">water_drop</span>
+                        Water Tank Level (%)
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="tankChart"></canvas>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if factory_features.get('diesel_tank_monitoring', True) %}
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span class="material-icons-round" style="color: #f59e0b;">local_gas_station</span>
+                        Diesel Tank Level (%)
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="dieselChart"></canvas>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div> <!-- Close content-wrapper -->
+
+            <div id="loader" class="loader-overlay section-only">
+                <div class="spinner"></div>
+                <div class="loader-text">Loading...</div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- BOTTOM NAVIGATION (Mobile Only) -->
+    <nav class="bottom-nav mobile-only">
+        <a href="{{ url_for('index') }}" class="nav-item">
+            <span class="material-icons-round">dashboard</span>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('pumps') }}" class="nav-item">
+            <span class="material-icons-round">water_drop</span>
+            <span>Pumps</span>
+        </a>
+        <a href="{{ url_for('alarms') }}" class="nav-item">
+            <span class="material-icons-round">notifications_active</span>
+            <span>Alerts</span>
+        </a>
+        <a href="{{ url_for('analytics') }}" class="nav-item active">
+            <span class="material-icons-round">analytics</span>
+            <span>Stats</span>
+        </a>
+    </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Inject Factory DB URL from Server Session
+        window.FACTORY_DB_URL = "{{ session.get('factory_url') }}";
+    </script>
+    <script type="module" src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader');
+            if (loader.parentElement) loader.parentElement.style.position = 'relative';
+
+            const links = document.querySelectorAll('.sidebar a, .user-dropdown a, a[href^="/"]');
+
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (e.ctrlKey || e.metaKey || link.target === '_blank' || link.getAttribute('href').startsWith('#')) return;
+                    loader.style.display = 'flex';
+                });
+            });
+        });
+
+
+
+        // --- ALERT COUNT LOGIC ---
+        async function fetchAlertData() {
+            try {
+                const response = await fetch('/api/live_data');
+                const data = await response.json();
+                calculateAlarms(data);
+            } catch (err) {
+                console.error("Alert fetch error:", err);
+            }
+        }
+
+        function calculateAlarms(data) {
+            let count = 0;
+
+            // 1. Pressure < 6
+            if ((parseFloat(data.pressure) || 0) < 6) count++;
+
+            // 2-4. Pumps ON (Check inside data.pumps)
+            const pumps = data.pumps || data.Pumps || {};
+            const isRunning = (p) => (p && (p.status === 'ON'));
+
+            if (isRunning(pumps.jockey || pumps.Jockey)) count++;
+            if (isRunning(pumps.main || pumps.Main)) count++;
+
+            if (isRunning(pumps.diesel || pumps.Diesel)) count++;
+
+            // 5. Tank Level < 95
+            const tank = parseFloat(data.waterLevel || data.tank_level || 0);
+            if (tank < 95) count++;
+
+            // 6. Manual Mode
+            const getMode = (p) => (p && p.mode) ? p.mode : 'AUTO';
+            const jMode = getMode(pumps.jockey || pumps.Jockey);
+            const mMode = getMode(pumps.main || pumps.Main);
+
+            const dMode = getMode(pumps.diesel || pumps.Diesel);
+
+            if (jMode === 'MANUAL' || mMode === 'MANUAL' || dMode === 'MANUAL') {
+                count++;
+            }
+
+            // 7. Diesel Level < 95
+            const diesel = parseFloat(data.dieselLevel || data.diesel_level || 0);
+            if (diesel < 95) count++;
+
+            // 8. Battery Voltage
+            const batt = parseFloat(data.batteryVoltage || data.battery_voltage || 0);
+            if (batt < 11.8 || batt > 14.2) count++;
+
+            // Update UI
+            const alarmCountEl = document.getElementById('alarmCount');
+            if (alarmCountEl) alarmCountEl.innerText = count;
+        }
+
+        setInterval(fetchAlertData, 2000); // Check alerts every 2s
+        fetchAlertData();
+
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,98 @@
+/* EAGLE AI FOTIA - Professional Dashboard Theme */
+:root {
+    --bg-dark: #0f172a;       /* Dark Navy Background */
+    --card-bg: #1e293b;       /* Panel Background */
+    --text-main: #f8fafc;     /* White Text */
+    --text-muted: #94a3b8;    /* Gray Text */
+    --accent: #06b6d4;        /* Cyan Brand Color */
+    --success: #10b981;       /* Green (Healthy) */
+    --danger: #ef4444;        /* Red (Critical) */
+    --warning: #f59e0b;       /* Orange (Warning) */
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding-bottom: 50px;
+}
+
+/* Navbar */
+.navbar-custom {
+    background-color: var(--card-bg);
+    border-bottom: 3px solid var(--accent);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    padding: 15px 0;
+}
+
+.brand-text {
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    font-size: 1.5rem;
+}
+
+/* Dashboard Cards */
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-title-custom {
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 10px;
+}
+
+/* Big Metrics (Pressure/Tank) */
+.metric-value {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.metric-unit {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+}
+
+/* Pump Status Rows */
+.pump-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #334155;
+}
+
+.pump-row:last-child { border-bottom: none; }
+
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    background-color: #334155; /* Default Off */
+}
+
+/* Dynamic Classes for JS */
+.bg-blink-red { animation: blink-red 1s infinite; background-color: var(--danger); }
+.text-critical { color: var(--danger) !important; font-weight: bold; }
+.text-healthy { color: var(--success) !important; }
+
+@keyframes blink-red {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle AI | DEVELOPER MASTER PANEL</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=mobile_fix_12">
+    <style>
+        .dev-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .dev-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dev-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .factory-item {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .factory-header {
+            padding: 12px 16px;
+            background: #f9fafb;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .factory-features {
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .feature-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 8px 12px;
+            border: 1px solid #eee;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="brand-logo">
+                <h1>EAGLEAI<span class="brand-subtitle">DEV</span></h1>
+            </div>
+            <ul class="nav-links">
+                <!-- Standard links hidden for Dev focus unless needed, but let's keep them for navigation if desired -->
+                <!-- We'll replicate the standard sidebar but Active on Developer Panel -->
+
+                {% if session.get('role') in ['admin', 'superadmin', 'developer'] %}
+                <li><a href="{{ url_for('admin_users') }}"><span class="material-icons-round">people</span> User
+                        Management</a></li>
+                {% endif %}
+
+                <li class="active"><a href="{{ url_for('developer_dashboard') }}"><span
+                            class="material-icons-round">code</span> Developer Panel</a></li>
+            </ul>
+            <div class="sidebar-footer">Powered by <strong>AONIX</strong></div>
+        </nav>
+
+        <main class="main-content">
+            <!-- APP BAR -->
+            <header class="app-bar">
+                <div class="app-bar-left">
+                    <div class="site-selector desktop-only">
+                        <span class="site-name">DEVELOPER CONSOLE • FOTIA TEAM</span>
+                    </div>
+                </div>
+                <div class="app-bar-center">
+                    <h2 class="app-title">Master Control</h2>
+                </div>
+                <div class="app-bar-right">
+                    <div class="user-profile-container">
+                        <div class="user-mini-profile" onclick="toggleUserDropdown(event)">
+                            <div class="user-mini-info">
+                                <span class="user-mini-name">{{ session.get('name', 'Developer') }}</span>
+                                <span class="user-mini-role">DEVELOPER</span>
+                            </div>
+                            <div class="user-icon-circle" style="background: #6366f1; color: white;">
+                                <span class="material-icons-round">code</span>
+                            </div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <a href="{{ url_for('logout') }}" class="user-dropdown-item text-danger">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ALERTS -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div style="margin-bottom: 24px;">
+                {% for category, message in messages %}
+                <div class="card"
+                    style="padding: 12px 20px; border-left: 4px solid var(--accent-green); flex-direction: row; gap: 12px;">
+                    {% if category == 'error' %}
+                    <span class="material-icons-round" style="color: var(--accent-red);">error</span>
+                    {% else %}
+                    <span class="material-icons-round" style="color: var(--accent-green);">check_circle</span>
+                    {% endif %}
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="grid" style="grid-template-columns: 1fr;">
+
+                <!-- ADD FACTORY FORM -->
+                <div class="dev-card">
+                    <div class="dev-header">
+                        <div class="dev-title"><span class="material-icons-round">add_business</span> Add New Factory /
+                            Company</div>
+                    </div>
+                    <form action="{{ url_for('developer_add_factory') }}" method="POST"
+                        style="display: flex; gap: 12px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <label
+                                style="display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500;">Factory
+                                Name</label>
+                            <input type="text" name="name" placeholder="e.g. Pune Plant 2" class="form-control" required
+                                style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+                        <div style="flex: 2;">
+                            <label
+                                style="display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500;">Firebase
+                                Realtime Database URL</label>
+                            <input type="url" name="firebase_url" placeholder="https://..." class="form-control"
+                                required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+                        <button type="submit"
+                            style="background: #6366f1; color: white; border: none; padding: 9px 20px; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                            ADD DB
+                        </button>
+                    </form>
+                </div>
+
+                <!-- DEVELOPER SECURITY -->
+                <div class="dev-card">
+                    <div class="dev-header">
+                        <div class="dev-title"><span class="material-icons-round">lock</span> Developer Security -
+                            Change Password</div>
+                    </div>
+                    <form action="{{ url_for('developer_change_password') }}" method="POST"
+                        style="display: flex; gap: 12px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <label
+                                style="display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500;">Current
+                                Password</label>
+                            <div style="position: relative;">
+                                <input type="password" name="current_password" placeholder="Current Password"
+                                    class="form-control" required
+                                    style="width: 100%; padding: 8px; padding-right: 35px; border: 1px solid #ccc; border-radius: 4px;">
+                                <span class="material-icons-round toggle-password" onclick="togglePassword(this)"
+                                    style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; font-size: 1.2rem;">visibility_off</span>
+                            </div>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500;">New
+                                Password</label>
+                            <div style="position: relative;">
+                                <input type="password" name="new_password" placeholder="New Password"
+                                    class="form-control" required
+                                    style="width: 100%; padding: 8px; padding-right: 35px; border: 1px solid #ccc; border-radius: 4px;">
+                                <span class="material-icons-round toggle-password" onclick="togglePassword(this)"
+                                    style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; font-size: 1.2rem;">visibility_off</span>
+                            </div>
+                        </div>
+                        <div style="flex: 1;">
+                            <label
+                                style="display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500;">Confirm
+                                Password</label>
+                            <div style="position: relative;">
+                                <input type="password" name="confirm_password" placeholder="Confirm Password"
+                                    class="form-control" required
+                                    style="width: 100%; padding: 8px; padding-right: 35px; border: 1px solid #ccc; border-radius: 4px;">
+                                <span class="material-icons-round toggle-password" onclick="togglePassword(this)"
+                                    style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; font-size: 1.2rem;">visibility_off</span>
+                            </div>
+                        </div>
+                        <button type="submit"
+                            style="background: #6366f1; color: white; border: none; padding: 9px 20px; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                            UPDATE
+                        </button>
+                    </form>
+                </div>
+
+                <!-- FACTORIES LIST & CONTROLS -->
+                <div class="dev-card">
+                    <div class="dev-header">
+                        <div class="dev-title"><span class="material-icons-round">settings_applications</span> Active
+                            Factories & Feature Flags</div>
+                    </div>
+
+                    {% for f in factories %}
+                    <div class="factory-item">
+                        <div class="factory-header">
+                            <div>
+                                <strong style="font-size: 1rem;">{{ f.name }}</strong>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">{{
+                                    f.firebase_url }}</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <form action="{{ url_for('developer_update_factory_pin') }}" method="POST"
+                                    style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="hidden" name="factory_id" value="{{ f.id }}">
+                                    <input type="text" name="new_pin" placeholder="Set PIN (6 digits)" maxlength="6"
+                                        style="font-size: 0.8rem; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; width: 120px;">
+                                    <button type="submit"
+                                        style="background: white; border: 1px solid var(--accent-blue); color: var(--accent-blue); border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; font-weight: 600; cursor: pointer;">
+                                        UPDATE PIN
+                                    </button>
+                                </form>
+                                <span class="material-icons-round" style="color: var(--text-tertiary);">domain</span>
+                            </div>
+                        </div>
+
+                        <!-- DANGER ZONE ACTIONS -->
+                        <div
+                            style="padding: 12px 16px; background: #fff5f5; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; justify-content: flex-end;">
+                            <!-- Clear Logs -->
+                            <form action="{{ url_for('developer_clear_logs', factory_id=f.id) }}" method="POST"
+                                onsubmit="return confirm('Are you sure you want to CLEAR ALL LOGS for this factory? This cannot be undone.');">
+                                <button type="submit"
+                                    style="background: transparent; border: 1px solid #f59e0b; color: #f59e0b; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <span class="material-icons-round" style="font-size: 16px;">history</span> CLEAR
+                                    LOGS
+                                </button>
+                            </form>
+
+                            <!-- Delete Factory -->
+                            <form action="{{ url_for('developer_delete_factory', factory_id=f.id) }}" method="POST"
+                                onsubmit="return confirm('Are you sure you want to DELETE this factory? This will remove it from the system metadata.');">
+                                <button type="submit"
+                                    style="background: var(--accent-red); border: none; color: white; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <span class="material-icons-round" style="font-size: 16px;">delete</span> DELETE
+                                </button>
+                            </form>
+                        </div>
+                        <div class="factory-features">
+                            {% for key, val in f.features.items() %}
+                            <div class="feature-toggle">
+                                <span style="text-transform: capitalize;">{{ key.replace('_', ' ') }}</span>
+                                <form action="{{ url_for('developer_toggle_feature') }}" method="POST"
+                                    style="margin: 0;">
+                                    <input type="hidden" name="factory_id" value="{{ f.id }}">
+                                    <input type="hidden" name="key" value="{{ key }}">
+                                    <input type="hidden" name="value" value="{{ val }}">
+                                    <button type="submit"
+                                        style="border: none; background: none; cursor: pointer; color: {{ 'var(--accent-green)' if val else '#ccc' }};">
+                                        <span class="material-icons-round" style="font-size: 24px;">{{ 'toggle_on' if
+                                            val else 'toggle_off' }}</span>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+
+                            <!-- Add Custom Feature Form -->
+                            <div class="feature-add-row"
+                                style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #eee;">
+                                <form action="{{ url_for('developer_toggle_feature') }}" method="POST"
+                                    style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="hidden" name="factory_id" value="{{ f.id }}">
+                                    <input type="hidden" name="action" value="set">
+                                    <input type="hidden" name="value" value="True"> <!-- Default to True when adding -->
+
+                                    <input type="text" name="key" placeholder="New Feature Key"
+                                        style="flex: 1; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem;">
+
+                                    <button type="submit" class="btn-xs"
+                                        style="background: var(--accent-blue); color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+                                        <span class="material-icons-round" style="font-size: 16px;">add</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="text-align: center; color: var(--text-tertiary); padding: 20px;">No factories found.</p>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <!-- BOTTOM NAVIGATION (Mobile Only) -->
+    <nav class="bottom-nav mobile-only">
+        <a href="{{ url_for('index') }}" class="nav-item">
+            <span class="material-icons-round">dashboard</span>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('pumps') }}" class="nav-item">
+            <span class="material-icons-round">water_drop</span>
+            <span>Pumps</span>
+        </a>
+        <a href="{{ url_for('alarms') }}" class="nav-item">
+            <span class="material-icons-round">notifications_active</span>
+            <span>Alerts</span>
+        </a>
+        <a href="{{ url_for('analytics') }}" class="nav-item">
+            <span class="material-icons-round">analytics</span>
+            <span>Stats</span>
+        </a>
+    </nav>
+
+    <script>
+        function toggleUserDropdown(event) {
+            event.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('show');
+        }
+
+        function togglePassword(icon) {
+            const container = icon.parentElement;
+            const input = container.querySelector('input');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerText = 'visibility';
+            } else {
+                input.type = 'password';
+                icon.innerText = 'visibility_off';
+            }
+        }
+
+        window.addEventListener('click', () => {
+            const dd = document.getElementById('userDropdown');
+            if (dd) dd.classList.remove('show');
+        });
+    </script>
+</body>
+
+</html>

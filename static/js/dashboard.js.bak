@@ -1,0 +1,299 @@
+// Path: static/js/dashboard.js
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getDatabase, ref, onValue, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+// Import config (Ensure this file exists in static/js/)
+import { firebaseConfig } from './firebase_config.js';
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// --- 1. SETUP LISTENERS ---
+
+// Use a Query to get only the latest entry from 'live_data'
+const liveDataRef = query(ref(db, 'live_data'), limitToLast(1));
+
+// Reference for sending commands (Capital 'C' matches your Python code)
+const commandsRef = ref(db, 'Commands');
+
+// --- 2. LISTEN FOR LIVE SENSOR DATA ---
+onValue(liveDataRef, (snapshot) => {
+    const rawData = snapshot.val();
+
+    if (rawData) {
+        // DATA PROCESSING LOGIC:
+        // Firebase returns an object like: { "-OhOj...": { pressure: 0, ... } }
+        // We extract the value *inside* that dynamic key.
+        const keys = Object.keys(rawData);
+        const latestKey = keys[keys.length - 1]; // Get the most recent ID
+        const finalData = rawData[latestKey];    // Get the actual data inside it
+
+        // console.log("🔥 Latest Data:", finalData); // Debugging
+        updateDashboard(finalData);
+    } else {
+        console.warn("⚠️ No data found in 'live_data'");
+    }
+});
+
+// --- 3. LISTEN FOR COMMAND STATUS (TOGGLE SWITCH) ---
+onValue(commandsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+        const switchEl = document.getElementById('remoteSwitch');
+        // Check if motor_status is "ON"
+        const isOn = data.motor_status === "ON";
+
+        // Only update if different to prevent loop
+        if (switchEl.checked !== isOn) {
+            switchEl.checked = isOn;
+        }
+    }
+});
+
+// --- 4. HANDLE TOGGLE SWITCH CLICKS ---
+document.getElementById('remoteSwitch').addEventListener('change', (e) => {
+    const newState = e.target.checked ? "ON" : "OFF";
+    update(commandsRef, {
+        motor_status: newState,
+        updated_at: Date.now()
+    });
+    console.log("Command Sent:", newState);
+});
+
+// Helper for Pulse Animation
+function pulse(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.classList.remove("data-updated");
+        void el.offsetWidth; // Trigger reflow
+        el.classList.add("data-updated");
+    }
+}
+
+// ============================================================
+// UI UPDATE FUNCTIONS
+// ============================================================
+
+function updateDashboard(data) {
+    // 1. Timestamp
+    if (data.lastUpdated) {
+        const date = new Date(data.lastUpdated);
+        document.getElementById('lastUpdated').textContent = "Updated: " + date.toLocaleTimeString();
+    }
+
+    // 2. Pressure Display
+    // 2. Pressure Display
+    const pressure = parseFloat(data.pressure || 0);
+    document.getElementById('pressureValue').textContent = pressure.toFixed(1);
+    pulse('pressureValue'); // Pulse animation
+
+    // Gauge Logic
+    // Range: 0 to 9 kg/cm2
+    // Angle: -135deg (0) to +135deg (9) -> Total swing 270deg
+    const maxPressure = 9;
+    const minAngle = -135;
+    const maxAngle = 135;
+
+    // Clamp pressure between 0 and max
+    const clampedPressure = Math.max(0, Math.min(pressure, maxPressure));
+
+    // Calculate rotation
+    const rotation = minAngle + ((clampedPressure / maxPressure) * (maxAngle - minAngle));
+
+    // Apply rotation
+    const needle = document.getElementById('pressureNeedle');
+    if (needle) {
+        needle.style.transform = `translateX(-50%) translateY(-100%) rotate(${rotation}deg)`;
+
+        // Color logic for needle (optional, or keep standard red)
+        if (pressure >= 12) {
+            needle.style.filter = "brightness(1.2) drop-shadow(0 0 2px red)";
+        } else {
+            needle.style.filter = "none";
+        }
+    }
+
+    // 3. Tank Level Display
+    const tankLevel = data.waterLevel || 0;
+    const tankValEl = document.getElementById('tankValue');
+    if (tankValEl) {
+        tankValEl.textContent = tankLevel;
+        pulse('tankValue');
+    }
+
+    // Update Tank Visual Bar
+    // Update Tank Visual Bar
+    const tankBar = document.getElementById('tankLevelBar');
+    if (tankBar) {
+        // The sight glass on the chrome image is approximately 62% of the image height
+        const maxVisualHeightPercentage = 62;
+        const finalHeight = (tankLevel / 100) * maxVisualHeightPercentage;
+        tankBar.style.height = `${finalHeight}%`;
+
+        // Critical Level Coloring
+        if (tankLevel < 95) {
+            // Red for low level
+            tankBar.style.background = "linear-gradient(180deg, #EF4444 0%, #DC2626 100%)";
+            tankBar.style.boxShadow = "0 0 8px rgba(239, 68, 68, 0.6)";
+        } else {
+            // Blue for normal
+            tankBar.style.background = "linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%)";
+            tankBar.style.boxShadow = "0 0 8px rgba(59, 130, 246, 0.6)";
+        }
+    }
+
+    // 4. Update Pump Cards
+    if (data.pumps) {
+        updatePumpCard('Main', data.pumps.main);
+        updatePumpCard('Jockey', data.pumps.jockey);
+        updatePumpCard('Sprinkler', data.pumps.sprinkler);
+        updatePumpCard('Diesel', data.pumps.diesel);
+    }
+
+    // 5. BATTERY & DIESEL (New Sensors)
+    const batt = data.batteryVoltage || 0;
+    document.getElementById('batteryValue').textContent = batt;
+    pulse('batteryValue');
+
+    // Simple visual check for battery status
+    const batStatus = document.getElementById('batteryStatus');
+    if (batt < 11.5) { // Assuming 12V system, correct if 24V
+        batStatus.textContent = "Low Voltage";
+        batStatus.style.color = "var(--accent-red)";
+    } else {
+        batStatus.textContent = "Normal";
+        batStatus.style.color = "var(--text-secondary)";
+    }
+
+    // Dynamic Battery Indicators (Removed for Solid Battery)
+
+
+    const diesel = data.dieselLevel || 0;
+    document.getElementById('dieselLevelValue').textContent = diesel;
+
+    // Pure CSS Tank Visualization
+    const dieselBar = document.getElementById('dieselLevelBarVisual'); // Use correct ID
+    if (dieselBar) {
+        // Map level directly to height (0-100%)
+        dieselBar.style.height = `${diesel}%`;
+
+        // Color Logic
+        if (diesel < 20) {
+            dieselBar.style.background = "linear-gradient(90deg, #EF4444, #DC2626)";
+            dieselBar.style.boxShadow = "0 0 10px #EF4444";
+        } else {
+            dieselBar.style.background = "linear-gradient(90deg, #d97706, #f59e0b, #d97706)";
+            dieselBar.style.boxShadow = "0 0 10px #f59e0b";
+        }
+    }
+
+    // ============================================================
+    // 5. ALERT LOGIC (Strictly based on Prototype PDF)
+    // ============================================================
+    let activeAlerts = [];
+
+    // Condition 1: Fire Hydrant Line Pressure < 6 kg/cm²
+    if (pressure < 6.0) {
+        activeAlerts.push(`Critical Pressure Low (${pressure} Bar)`);
+    }
+
+    // Condition 5: Water Tank Level < 95%
+    if (tankLevel < 95.0) {
+        activeAlerts.push(`Water Level Low (${tankLevel}%)`);
+    }
+
+    // Low Battery/Diesel Alerts
+    if (batt < 11.5) activeAlerts.push(`Low Battery (${batt}V)`);
+    if (diesel < 20) activeAlerts.push(`Low Diesel (${diesel}%)`);
+
+    if (data.pumps) {
+        const p = data.pumps;
+
+        // Condition 2, 3, 4: Pumps Running > 1 minute (60 seconds)
+        // Checks 'runTime' OR 'duration' to be safe with backend naming
+        if (p.main && (p.main.runTime > 60 || p.main.duration > 60)) activeAlerts.push("Main Pump Overrun");
+        if (p.jockey && (p.jockey.runTime > 60 || p.jockey.duration > 60)) activeAlerts.push("Jockey Pump Overrun");
+        if (p.sprinkler && (p.sprinkler.runTime > 60 || p.sprinkler.duration > 60)) activeAlerts.push("Sprinkler Pump Overrun");
+        if (p.diesel && (p.diesel.runTime > 60 || p.diesel.duration > 60)) activeAlerts.push("Diesel Engine Overrun");
+
+        // Condition 6: Any Pump in MANUAL Mode
+        if (p.main && p.main.mode === 'MANUAL') activeAlerts.push("Main Pump in MANUAL");
+        if (p.jockey && p.jockey.mode === 'MANUAL') activeAlerts.push("Jockey Pump in MANUAL");
+        if (p.sprinkler && p.sprinkler.mode === 'MANUAL') activeAlerts.push("Sprinkler Pump in MANUAL");
+        if (p.diesel && p.diesel.mode === 'MANUAL') activeAlerts.push("Diesel Engine in MANUAL");
+    }
+
+    // --- UPDATE ALERT BANNER (Restored) ---
+    const banner = document.getElementById('systemAlertBanner');
+    const msgData = activeAlerts.length > 0 ? activeAlerts : [];
+    const tankText = document.getElementById('tankStatus');
+
+    if (msgData.length > 0) {
+        // Show Banner
+        if (banner) {
+            banner.style.display = 'block';
+            banner.innerHTML = `<span class="material-icons-round" style="vertical-align: middle; margin-right: 8px;">warning</span> <strong>System Alerts:</strong> ${msgData.join(', ')}`;
+            banner.className = 'alert-banner critical-alert-bar'; // Ensure CSS exists
+        }
+
+        // Critical State Logic for Cards
+        if (tankLevel < 95) {
+            if (tankText) {
+                tankText.textContent = "Low Level (<95%)";
+                tankText.style.color = "var(--accent-red)";
+            }
+        }
+
+    } else {
+        // Hide Banner
+        if (banner) banner.style.display = 'none';
+
+        // Normal State Logic
+        if (tankText) {
+            tankText.textContent = "Normal Level";
+            tankText.style.color = "var(--text-secondary)";
+        }
+    }
+}
+
+function updatePumpCard(type, pumpData) {
+    if (!pumpData) return;
+
+    const prefix = type.toLowerCase();
+    // e.g. 'main', 'jockey', 'sprinkler', 'diesel'
+
+    // Status Pill
+    const pillEl = document.getElementById(`${prefix}StatusPill`);
+    const cardEl = document.getElementById(`${prefix}Card`);
+
+    // Default Styling Reset
+    pillEl.className = "status-pill";
+    cardEl.classList.remove("manual-mode-active");
+
+    // Mode Handling
+    let mode = pumpData.mode || "AUTO";
+
+    if (mode === "MANUAL") {
+        pillEl.classList.add("pill-manual");
+        pillEl.textContent = "MANUAL";
+    } else if (mode === "OFF") {
+        pillEl.classList.add("pill-off");
+        pillEl.textContent = "OFF";
+    } else if (mode === "AUTO") {
+        pillEl.classList.add("pill-running");
+        pillEl.textContent = "AUTO";
+    } else {
+        pillEl.classList.add("pill-standby");
+        pillEl.textContent = "STANDBY";
+    }
+
+    // --- MANUAL MODE ANIMATION ---
+    // Aggressive visual alert for Manual Mode
+    if (mode === "MANUAL") {
+        cardEl.classList.add("manual-mode-active");
+    } else {
+        cardEl.classList.remove("manual-mode-active");
+    }
+}
+

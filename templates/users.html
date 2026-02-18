@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle AI | User Management</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=mobile_fix_12">
+    <style>
+        /* Table Styles - Kept local as they are specific to this view */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badge Tweaks */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .badge-admin {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .badge-user {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .badge-superadmin {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fcd34d;
+        }
+
+        /* Form Tweaks */
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="brand-logo">
+                <h1>EAGLEAI<span class="brand-subtitle">FOTIA</span></h1>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}"><span class="material-icons-round">dashboard</span> Dashboard</a>
+                </li>
+                <li><a href="{{ url_for('pumps') }}"><span class="material-icons-round">water_drop</span> Pump
+                        Status</a></li>
+                <li><a href="{{ url_for('alarms') }}"><span class="material-icons-round">notifications_active</span>
+                        System Alerts</a></li>
+                <li><a href="{{ url_for('analytics') }}"><span class="material-icons-round">analytics</span>
+                        Analytics</a>
+                </li>
+                <li><a href="{{ url_for('history') }}"><span class="material-icons-round">history</span> Event Logs</a>
+                </li>
+                <li><a href="{{ url_for('settings') }}"><span class="material-icons-round">settings</span>
+                        Configuration</a>
+                </li>
+                {% if session.get('role') in ['admin', 'superadmin', 'developer'] %}
+                <li class="active"><a href="#"><span class="material-icons-round">people</span> User
+                        Management</a>
+                </li>
+                {% endif %}
+                <!-- DEVELOPER PANEL LINK -->
+                {% if session.get('role') == 'developer' %}
+                <li><a href="{{ url_for('developer_dashboard') }}"><span class="material-icons-round">code</span>
+                        Developer Panel</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="sidebar-footer">
+                Powered by <strong>AONIX</strong>
+            </div>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <!-- APP BAR -->
+            <header class="app-bar">
+                <div class="app-bar-left">
+                    <div class="site-selector desktop-only">
+                        <span class="site-name">{{ session.get('factory_name', 'Select Factory') }}</span>
+                        <span class="material-icons-round"
+                            style="font-size: 1.2em; color: var(--text-tertiary);">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="app-bar-center">
+                    <h2 class="app-title">User Management</h2>
+                    <div class="last-update">Admin Access Area</div>
+                </div>
+
+                <div class="app-bar-right">
+                    <div class="user-profile-container">
+                        <div class="user-mini-profile" onclick="toggleUserDropdown(event)">
+                            <div class="user-mini-info">
+                                <span class="user-mini-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-mini-role">{{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <div class="user-icon-circle">
+                                <span class="material-icons-round">person</span>
+                            </div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-dropdown-header">
+                                <span class="user-dropdown-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-dropdown-username"
+                                    style="display:block; font-size: 0.8em; color: var(--text-secondary);">ID: {{
+                                    session.get('username', '') }}</span>
+                                <span class="user-dropdown-username">Role: {{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <a href="{{ url_for('logout') }}" class="user-dropdown-item text-danger">
+                                <span class="material-icons-round" style="font-size: 20px;">logout</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    function toggleUserDropdown(event) {
+                        event.stopPropagation();
+                        // Close any other open dropdowns if consistent logic is needed, 
+                        // but here we just toggle specific ID.
+                        const dd = document.getElementById('userDropdown');
+                        dd.classList.toggle('show');
+                    }
+                    window.addEventListener('click', () => {
+                        const dd = document.getElementById('userDropdown');
+                        if (dd) dd.classList.remove('show');
+                    });
+                </script>
+            </header>
+
+            <!-- Global Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div style="margin-bottom: 24px;">
+                {% for category, message in messages %}
+                <div class="card"
+                    style="padding: 12px 20px; border-left: 4px solid var(--accent-green); flex-direction: row; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    {% if category == 'error' %}
+                    <span class="material-icons-round" style="color: var(--accent-red);">error</span>
+                    <style>
+                        div[style*="border-left: 4px solid var(--accent-green)"] {
+                            border-left-color: var(--accent-red) !important;
+                        }
+                    </style>
+                    {% else %}
+                    <span class="material-icons-round" style="color: var(--accent-green);">check_circle</span>
+                    {% endif %}
+                    <span style="font-weight: 500; font-size: 0.9rem;">{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="grid">
+
+                <!-- Create User Card -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <div class="card-title">CREATE NEW USER</div>
+                        <div class="icon-box">
+                            <span class="material-icons-round">person_add</span>
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('admin_add_user') }}" method="POST"
+                        style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+                        <input type="hidden" name="source_page" value="users">
+
+                        <div style="flex: 1; min-width: 200px;">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. John Doe" required>
+                        </div>
+
+                        <div style="flex: 1; min-width: 200px;">
+                            <label class="form-label">User ID (Login)</label>
+                            <input type="text" name="username" class="form-control" placeholder="e.g. jdoe" required>
+                        </div>
+
+                        <div style="flex: 1; min-width: 200px;">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="*******" required>
+                        </div>
+
+                        <div style="width: 150px;">
+                            <label class="form-label">Role</label>
+                            <select name="role" class="form-control" required id="roleSelect"
+                                onchange="autoCheckSettings()">
+                                <option value="user">Factory User</option>
+                                {% if session.get('role') in ['superadmin', 'developer'] %}
+                                <option value="admin">Admin</option>
+                                <option value="superadmin">Superadmin</option>
+                                {% endif %}
+                            </select>
+                        </div>
+
+                        <div style="flex: 1; min-width: 250px;">
+                            <label class="form-label">Assign Factory</label>
+                            <select name="factory_id" class="form-control">
+                                {% if factories|length == 1 %}
+                                <option value="{{ factories[0].id }}" selected>{{ factories[0].name }}</option>
+                                {% else %}
+                                <option value="">-- Assign Factory (User only) --</option>
+                                {% for factory in factories %}
+                                <option value="{{ factory.id }}">{{ factory.name }}</option>
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+
+                        <div
+                            style="flex: 1; min-width: 200px; display: flex; align-items: center; padding-bottom: 10px;">
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.85rem; cursor: pointer;">
+                                <input type="checkbox" name="settings_access" id="settingsAccessCheck"
+                                    style="width: 16px; height: 16px; accent-color: var(--text-primary);">
+                                Allow Settings Access
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn"
+                            style="background: var(--text-primary); color: white; height: 42px; padding: 0 24px;">Create
+                            User</button>
+                    </form>
+                    <script>
+                        function autoCheckSettings() {
+                            const role = document.getElementById('roleSelect').value;
+                            const check = document.getElementById('settingsAccessCheck');
+                            if (['admin', 'superadmin'].includes(role)) {
+                                check.checked = true;
+                            } else {
+                                check.checked = false;
+                            }
+                        }
+                    </script>
+                </div>
+
+                <!-- Users List -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <div class="card-title">SYSTEM USERS</div>
+                        <div class="icon-box" style="color: var(--accent-blue);">
+                            <span class="material-icons-round">group</span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>NAME</th>
+                                    <th>USER ID</th>
+                                    <th>ROLE</th>
+                                    <th>SETTINGS ACCESS</th>
+                                    <th>ASSIGNED FACTORY</th>
+                                    <th style="text-align: right;">ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td style="font-weight: 500;">{{ user.name or user.username }}</td>
+                                    <td style="font-family: monospace; color: var(--text-secondary);">{{ user.username
+                                        }}</td>
+                                    <td>
+                                        <span
+                                            class="badge {{ 'badge-superadmin' if user.role == 'superadmin' else ('badge-admin' if user.role == 'admin' else 'badge-user') }}">
+                                            {{ user.role|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if user.role in ['admin', 'superadmin', 'developer'] %}
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span class="material-icons-round"
+                                                style="color: var(--accent-green); font-size: 18px;">lock_open</span>
+                                            <span class="text-xs text-secondary">Full Access</span>
+                                        </div>
+                                        {% elif user.can_access_settings or (user.settings_unlock_expiry and
+                                        user.settings_unlock_expiry > current_time) %}
+                                        <!-- ALLOWED (Perm or Temp): Show Revoke -->
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div style="display: flex; align-items: center; gap: 4px;">
+                                                <span class="material-icons-round"
+                                                    style="color: var(--accent-green); font-size: 18px;">lock_open</span>
+                                                {% if (user.settings_unlock_expiry and user.settings_unlock_expiry >
+                                                current_time) and not user.can_access_settings %}
+                                                <span class="text-xs text-secondary">Temp (6h)</span>
+                                                {% else %}
+                                                <span class="text-xs text-secondary">Allowed</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <form action="{{ url_for('admin_toggle_access', user_id=user.id) }}"
+                                                method="POST" style="margin: 0;">
+                                                <input type="hidden" name="action" value="revoke">
+                                                <button type="submit"
+                                                    style="background: white; border: 1px solid var(--accent-red); color: var(--accent-red); border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                                    REVOKE
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% else %}
+                                        <!-- DENIED: Show Allow & 6h -->
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <span class="material-icons-round"
+                                                style="color: var(--text-tertiary); font-size: 18px;">lock</span>
+
+                                            <div style="display: flex; gap: 6px;">
+                                                <form action="{{ url_for('admin_toggle_access', user_id=user.id) }}"
+                                                    method="POST" style="margin: 0;">
+                                                    <input type="hidden" name="action" value="grant">
+                                                    <button type="submit"
+                                                        style="background: white; border: 1px solid var(--accent-green); color: var(--accent-green); border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; font-weight: 600; cursor: pointer;">
+                                                        ALLOW
+                                                    </button>
+                                                </form>
+
+                                                <form action="{{ url_for('admin_temp_unlock', user_id=user.id) }}"
+                                                    method="POST" style="margin: 0;">
+                                                    <button type="submit"
+                                                        style="background: white; border: 1px solid var(--border-color); color: var(--text-secondary); border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; font-weight: 600; cursor: pointer;">
+                                                        +6H
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.factory_name %}
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span class="material-icons-round"
+                                                style="font-size: 16px; color: var(--text-tertiary);">factory</span>
+                                            {{ user.factory_name }}
+                                        </div>
+                                        {% else %}
+                                        <span style="color: var(--text-tertiary);">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="text-align: right;">
+
+                                        {% set is_self = (user.id == session.get('user_id')) %}
+                                        {% set is_protected = (user.role in ['admin', 'superadmin']) %}
+                                        {% set can_delete = False %}
+
+                                        {% if session.get('role') == 'developer' and not is_self %}
+                                        {% set can_delete = True %}
+                                        <button type="button"
+                                            onclick='openResetModal("{{ user.id }}", "{{ user.username }}")'
+                                            style="background: white; border: 1px solid var(--text-tertiary); color: var(--text-secondary); padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; cursor: pointer; margin-right: 6px;">
+                                            Reset Pwd
+                                        </button>
+                                        {% elif session.get('role') == 'superadmin' and not is_self %}
+                                        {% set can_delete = True %}
+                                        {% elif session.get('role') == 'admin' and (not is_protected and not is_self) %}
+                                        {% set can_delete = True %}
+                                        {% endif %}
+
+                                        {% if can_delete %}
+                                        <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" method="POST"
+                                            style="display:inline;">
+                                            <input type="hidden" name="source_page" value="users">
+                                            <button type="submit"
+                                                style="background: #FEF2F2; color: #DC2626; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: background 0.2s;"
+                                                onclick="return confirm('Delete user {{ user.username }}?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <span
+                                            style="color: var(--text-tertiary); font-size: 0.8rem; font-style: italic;">Protected</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Factories List -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <div class="card-title">AVAILABLE FACTORIES</div>
+                        <div class="icon-box" style="color: var(--accent-orange);">
+                            <span class="material-icons-round">domain</span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>FACTORY NAME</th>
+                                    <th style="text-align: right;">CONTEXT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for factory in factories %}
+                                <tr>
+                                    <td style="font-weight: 600;">{{ factory.name }}</td>
+                                    <td style="text-align: right;">
+                                        <a href="{{ url_for('admin_switch_factory', factory_id=factory.id) }}"
+                                            style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: var(--text-primary); transition: all 0.2s;">
+                                            <span class="material-icons-round"
+                                                style="font-size: 16px;">visibility</span>
+                                            Switch View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="loader" class="loader-overlay section-only">
+                    <div class="spinner"></div>
+                    <div class="loader-text">Loading...</div>
+                </div>
+            </div>
+            <!-- BOTTOM NAVIGATION (Mobile Only) -->
+            <nav class="bottom-nav mobile-only">
+                <a href="{{ url_for('index') }}" class="nav-item">
+                    <span class="material-icons-round">dashboard</span>
+                    <span>Home</span>
+                </a>
+                <a href="{{ url_for('pumps') }}" class="nav-item">
+                    <span class="material-icons-round">water_drop</span>
+                    <span>Pumps</span>
+                </a>
+                <a href="{{ url_for('alarms') }}" class="nav-item">
+                    <span class="material-icons-round">notifications_active</span>
+                    <span>Alerts</span>
+                </a>
+                <a href="{{ url_for('analytics') }}" class="nav-item">
+                    <span class="material-icons-round">analytics</span>
+                    <span>Stats</span>
+                </a>
+            </nav>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const loader = document.getElementById('loader');
+                    // Ensure parent is relative for absolute positioning
+                    loader.parentElement.style.position = 'relative';
+
+                    const heavyLinks = document.querySelectorAll('a[href*="/settings"], a[href*="/analytics"], a[href*="/history"], a[href*="/admin/users"], a[href*="/logout"]');
+
+                    heavyLinks.forEach(link => {
+                        link.addEventListener('click', (e) => {
+                            if (e.ctrlKey || e.metaKey || link.target === '_blank') return;
+                            loader.style.display = 'flex';
+                        });
+                    });
+
+                    // Also show loader on form submit (creating/deleting users)
+                    const forms = document.querySelectorAll('form');
+                    forms.forEach(form => {
+                        form.addEventListener('submit', () => {
+                            loader.style.display = 'flex';
+                        });
+                    });
+                });
+            </script>
+            <!-- PASSWORD RESET MODAL -->
+            <div id="resetModal" class="lock-overlay"
+                style="display: none; align-items: center; justify-content: center;">
+                <div class="card" style="width: 100%; max-width: 400px; padding: 24px;">
+                    <h3 style="margin-top: 0; margin-bottom: 16px;">Reset Password (DEV)</h3>
+                    <p style="margin-bottom: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                        Enter new password for user: <strong id="resetUsernameDisplay"></strong>
+                    </p>
+
+                    <form action="{{ url_for('developer_reset_password') }}" method="POST">
+                        <input type="hidden" name="user_id" id="resetUserId">
+                        <div class="input-group">
+                            <label class="form-label">New Password</label>
+                            <input type="text" name="new_password" class="form-control" required
+                                placeholder="Enter new password">
+                        </div>
+
+                        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                            <button type="button" onclick="closeResetModal()" class="btn btn-outline">Cancel</button>
+                            <button type="submit" class="btn btn-primary"
+                                style="background: #6366f1; color: white;">Update Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+                function openResetModal(userId, username) {
+                    document.getElementById('resetUserId').value = userId;
+                    document.getElementById('resetUsernameDisplay').textContent = username;
+                    document.getElementById('resetModal').style.display = 'flex';
+                }
+
+                function closeResetModal() {
+                    document.getElementById('resetModal').style.display = 'none';
+                }
+            </script>
+</body>
+
+</html>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle AI | Configuration</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=mobile_fix_12">
+    <style>
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-family: var(--font-sans);
+            background: #f9fafb;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: white;
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .badge-green {
+            background: #ecfdf5;
+            color: var(--accent-green);
+        }
+
+        .badge-gray {
+            background: #f3f4f6;
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--text-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: black;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--text-secondary);
+        }
+
+        .btn-danger-text {
+            background: none;
+            color: var(--accent-red);
+            padding: 4px;
+        }
+
+        /* LOCK SCREEN STYLES */
+        .blur-content {
+            filter: blur(8px);
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .lock-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(240, 242, 245, 0.8);
+            z-index: 998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            border-radius: var(--radius-lg);
+        }
+
+        .lock-card {
+            background: white;
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border-color);
+            transform: translateY(-20px);
+            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(-20px);
+            }
+        }
+
+        .pin-display {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .pin-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            transition: all 0.2s;
+        }
+
+        .pin-dot.filled {
+            background-color: var(--text-primary);
+            border-color: var(--text-primary);
+        }
+
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .pin-btn {
+            background: #f9fafb;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .pin-btn:active {
+            transform: scale(0.95);
+            background: #e5e7eb;
+        }
+
+        @media (max-width: 768px) {
+            .lock-overlay {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+
+        <!-- SIDEBAR -->
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="brand-logo">
+                <h1>EAGLEAI<span class="brand-subtitle">FOTIA</span></h1>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}"><span class="material-icons-round">dashboard</span> Dashboard</a>
+                </li>
+                <li><a href="{{ url_for('pumps') }}"><span class="material-icons-round">water_drop</span> Pump
+                        Status</a></li>
+                <li><a href="{{ url_for('alarms') }}"><span class="material-icons-round">notifications_active</span>
+                        System Alerts</a></li>
+                <li><a href="{{ url_for('analytics') }}"><span class="material-icons-round">analytics</span>
+                        Analytics</a>
+                </li>
+                <li><a href="{{ url_for('history') }}"><span class="material-icons-round">history</span> Event Logs</a>
+                </li>
+                <li class="active"><a href="#"><span class="material-icons-round">settings</span> Configuration</a></li>
+                {% if session.get('role') in ['admin', 'superadmin', 'developer'] %}
+                <li><a href="{{ url_for('admin_users') }}"><span class="material-icons-round">people</span> User
+                        Management</a>
+                </li>
+                {% endif %}
+                <!-- DEVELOPER PANEL LINK -->
+                {% if session.get('role') == 'developer' %}
+                <li><a href="{{ url_for('developer_dashboard') }}"><span class="material-icons-round">code</span>
+                        Developer Panel</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="sidebar-footer">
+                Powered by <strong>AONIX</strong>
+            </div>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <!-- Global Messages / Alerts -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div style="margin-bottom: 24px;">
+                {% for category, message in messages %}
+                <div class="card"
+                    style="padding: 12px 20px; border-left: 4px solid var(--accent-green); flex-direction: row; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    {% if category == 'error' %}
+                    <span class="material-icons-round" style="color: var(--accent-red);">error</span>
+                    <style>
+                        div[style*="border-left: 4px solid var(--accent-green)"] {
+                            border-left-color: var(--accent-red) !important;
+                        }
+                    </style>
+                    {% else %}
+                    <span class="material-icons-round" style="color: var(--accent-green);">check_circle</span>
+                    {% endif %}
+                    <span style="font-weight: 500; font-size: 0.9rem;">{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+
+            <!-- Logic for Views -->
+            <!-- VIEW: SETTINGS DASHBOARD -->
+            <!-- Sticky App Bar -->
+            <header class="app-bar">
+                <div class="app-bar-left">
+                    <div class="site-selector desktop-only">
+                        <span class="site-name">{{ session.get('factory_name', 'Select Factory') }}</span>
+                        <span class="material-icons-round"
+                            style="font-size: 1.2em; color: var(--text-tertiary);">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="app-bar-center">
+                    <h2 class="app-title">System Configuration</h2>
+                    <div class="last-update">ID: EAGLE-AI-FOTIA-01</div>
+                </div>
+
+                <div class="app-bar-right">
+                    <div class="user-profile-container">
+                        <div class="user-mini-profile" onclick="toggleUserDropdown(event)">
+                            <div class="user-mini-info">
+                                <span class="user-mini-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-mini-role">{{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <div class="user-icon-circle">
+                                <span class="material-icons-round">person</span>
+                            </div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-dropdown-header">
+                                <span class="user-dropdown-name">{{ session.get('name', session.get('username', 'User'))
+                                    }}</span>
+                                <span class="user-dropdown-username"
+                                    style="display:block; font-size: 0.8em; color: var(--text-secondary);">ID: {{
+                                    session.get('username', '') }}</span>
+                                <span class="user-dropdown-username">Role: {{ session.get('role', 'Role') }}</span>
+                            </div>
+                            <a href="{{ url_for('logout') }}" class="user-dropdown-item text-danger">
+                                <span class="material-icons-round" style="font-size: 20px;">logout</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                    <script>
+                        function toggleUserDropdown(event) {
+                            event.stopPropagation();
+                            const dd = document.getElementById('userDropdown');
+                            dd.classList.toggle('show');
+                        }
+                        window.addEventListener('click', () => {
+                            const dd = document.getElementById('userDropdown');
+                            if (dd) dd.classList.remove('show');
+                        });
+                    </script>
+                </div>
+            </header>
+
+            <div class="grid" id="settingsContent">
+                <!-- CARD 3: Operational Config -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <div class="card-title">HARDWARE & TIMING</div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px;">
+                        <!-- Calibration Form -->
+                        <form method="POST" action="{{ url_for('settings') }}">
+                            <input type="hidden" name="action" value="save_calibration">
+                            <h4
+                                style="margin: 0 0 20px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                                <span class="material-icons-round"
+                                    style="font-size: 18px; color: var(--accent-blue);">tune</span> Sensor Calibration
+                            </h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div class="input-group">
+                                    <label class="form-label">Tank Height (cm)</label>
+                                    <input type="number" step="0.1" name="tank_height_cm"
+                                        value="{{ current_settings.tank_height_cm }}" class="form-control" required>
+                                </div>
+                                <div class="input-group">
+                                    <label class="form-label">Pump Runtime Limit (sec)</label>
+                                    <input type="number" step="1" name="pump_runtime_threshold"
+                                        value="{{ current_settings.pump_runtime_threshold }}" class="form-control"
+                                        required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-outline">Save Calibration</button>
+                        </form>
+
+                        <!-- Frequency Form -->
+                        <form method="POST" action="{{ url_for('settings') }}">
+                            <input type="hidden" name="action" value="save_frequencies">
+                            <h4
+                                style="margin: 0 0 20px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                                <span class="material-icons-round"
+                                    style="font-size: 18px; color: var(--accent-orange);">timer</span> Data Frequency
+                            </h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div class="input-group">
+                                    <label class="form-label">Normal Update</label>
+                                    <select name="normal_frequency_seconds" class="form-control">
+                                        <option value="21600" {% if current_settings.normal_frequency_seconds==21600
+                                            %}selected{% endif %}>6 Hours</option>
+                                        <option value="28800" {% if current_settings.normal_frequency_seconds==28800
+                                            %}selected{% endif %}>8 Hours</option>
+                                        <option value="43200" {% if current_settings.normal_frequency_seconds==43200
+                                            %}selected{% endif %}>12 Hours</option>
+                                        <option value="86400" {% if current_settings.normal_frequency_seconds==86400
+                                            %}selected{% endif %}>24 Hours</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label class="form-label">Critical Cooldown</label>
+                                    <select name="critical_frequency_seconds" class="form-control">
+                                        <option value="900" {% if current_settings.critical_frequency_seconds==900
+                                            %}selected{% endif %}>15 Mins</option>
+                                        <option value="1800" {% if current_settings.critical_frequency_seconds==1800
+                                            %}selected{% endif %}>30 Mins</option>
+                                        <option value="3600" {% if current_settings.critical_frequency_seconds==3600
+                                            %}selected{% endif %}>60 Mins</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-outline">Update Timers</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3.5: Security Settings -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <div class="card-title">SECURITY</div>
+                </div>
+
+                <h4 style="margin: 0 0 20px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                    <span class="material-icons-round" style="font-size: 18px; color: var(--text-primary);">lock</span>
+                    Access Control
+                </h4>
+
+                <form method="POST" action="{{ url_for('settings') }}"
+                    style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                    <input type="hidden" name="action" value="save_pin">
+                    <div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                        <label class="form-label">New PIN (6 Digits)</label>
+                        <input type="password" name="new_pin" maxlength="6" pattern="\d{6}" placeholder="******"
+                            class="form-control" required>
+                    </div>
+                    <div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                        <label class="form-label">Confirm PIN</label>
+                        <input type="password" name="confirm_pin" maxlength="6" pattern="\d{6}" placeholder="******"
+                            class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-outline" style="min-width: 140px;">Update PIN</button>
+                </form>
+            </div>
+
+            <!-- CARD 4: SMS Management -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <div class="card-title">NOTIFICATIONS</div>
+                </div>
+
+                <h4 style="margin: 0 0 16px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                    <span class="material-icons-round" style="font-size: 18px; color: var(--accent-green);">sms</span>
+                    SMS Recipients
+                </h4>
+
+                <div style="margin-bottom: 24px;">
+                    {% if phone_numbers %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                        {% for number in phone_numbers %}
+                        <div
+                            style="display: flex; align-items: center; background: white; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 50px; box-shadow: var(--shadow-sm);">
+                            <div style="font-weight: 500; font-size: 0.9rem; margin-right: 8px;">
+                                <span style="color: var(--text-secondary);">{{ number.name }}</span> <span
+                                    style="color: var(--border-color); margin: 0 4px;">|</span> {{ number.number }}
+                            </div>
+                            <span class="badge badge-gray" style="margin-right: 12px; font-size: 0.65rem;">{{
+                                number.recipient_type }}</span>
+                            <form method="POST" action="{{ url_for('settings') }}" style="margin: 0;">
+                                <input type="hidden" name="action" value="delete_number">
+                                <input type="hidden" name="number_id" value="{{ number.id }}">
+                                <button type="submit" class="btn-danger-text">
+                                    <span class="material-icons-round" style="font-size: 18px;">close</span>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div
+                        style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic; background: #f9fafb; padding: 12px; border-radius: var(--radius-sm); text-align: center;">
+                        No recipients configured.</div>
+                    {% endif %}
+                </div>
+
+                {% if phone_numbers|length < 4 %} <form method="POST" action="{{ url_for('settings') }}"
+                    style="background: #f9fafb; padding: 20px; border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+                    <input type="hidden" name="action" value="add_number">
+                    <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+                        <div class="input-group" style="flex-grow: 1; margin-bottom: 0;">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="holder_name" placeholder="John Doe" class="form-control" required>
+                        </div>
+                        <div class="input-group" style="flex-grow: 1; margin-bottom: 0;">
+                            <label class="form-label">Number</label>
+                            <input type="tel" name="new_number" placeholder="+91..." class="form-control" required>
+                        </div>
+                        <div class="input-group" style="width: 150px; margin-bottom: 0;">
+                            <label class="form-label">Type</label>
+                            <select name="recipient_type" class="form-control">
+                                <option value="NORMAL">Normal</option>
+                                <option value="CRITICAL">Critical</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: auto; padding: 10px 24px;">Add
+                            Recipient</button>
+                    </div>
+                    </form>
+                    {% else %}
+                    <div
+                        style="padding: 16px; background: #FEF2F2; color: #DC2626; border: 1px solid #FCA5A5; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span class="material-icons-round">block</span>
+                        Maximum of 4 recipients reached. Delete a number to add a new one.
+                    </div>
+                    {% endif %}
+            </div>
+    </div>
+
+    <!-- LOCK SCREEN OVERLAY -->
+    <div id="lockScreen" class="lock-overlay">
+        <div class="lock-card" style="max-width: 380px; padding: 48px 32px; border-top: 4px solid var(--text-primary);">
+            {% if access_allowed %}
+            <!-- ALLOWED: Professional PIN Input -->
+            <div style="margin-bottom: 32px;">
+                <div
+                    style="width: 64px; height: 64px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                    <span class="material-icons-round" style="font-size: 32px; color: var(--text-primary);">lock</span>
+                </div>
+                <h2
+                    style="margin: 0; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">
+                    System Locked</h2>
+                <p style="color: var(--text-secondary); margin: 8px 0 0 0; font-size: 0.95rem;">Authentication required
+                    for access</p>
+            </div>
+
+            <div style="text-align: left; margin-bottom: 24px;">
+                <div class="input-group" style="margin-bottom: 8px;">
+                    <label class="form-label"
+                        style="text-align: center; display: block; margin-bottom: 12px; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase;">Security
+                        PIN</label>
+                    <input type="password" id="manualPinInput" class="form-control" placeholder="••••••" maxlength="6"
+                        style="text-align: center; font-size: 1.5rem; letter-spacing: 0.2em; height: 56px; border: 2px solid var(--border-color); border-radius: var(--radius-md); transition: all 0.2s;">
+                </div>
+                <p id="pinError"
+                    style="color: var(--accent-red); font-size: 0.85rem; text-align: center; min-height: 20px; margin: 0; opacity: 0; transition: opacity 0.2s; font-weight: 500;">
+                    <span class="material-icons-round"
+                        style="font-size: 16px; vertical-align: text-bottom;">error</span> Incorrect PIN
+                </p>
+            </div>
+
+            <button onclick="checkManualPin()" class="btn btn-primary"
+                style="width: 100%; padding: 14px; font-size: 1rem; justify-content: center; border-radius: 8px;">
+                <span class="material-icons-round">key</span> Unlock Configuration
+            </button>
+
+            <div
+                style="margin-top: 24px; font-size: 0.75rem; color: var(--text-tertiary); border-top: 1px solid var(--border-color); padding-top: 16px;">
+                SECURE CONFIGURATION PANEL
+            </div>
+
+            <style>
+                #manualPinInput:focus {
+                    border-color: var(--text-primary);
+                    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+                }
+            </style>
+            {% else %}
+            <!-- DENIED: Contact Admin -->
+            <div style="margin-bottom: 24px;">
+                <div
+                    style="width: 64px; height: 64px; background: #FEF2F2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                    <span class="material-icons-round"
+                        style="font-size: 32px; color: var(--accent-red);">gpp_maybe</span>
+                </div>
+                <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">Access Denied
+                </h2>
+                <p style="color: var(--text-secondary); margin: 8px 0 0 0; font-size: 0.95rem;">Authorization missing
+                    for this area</p>
+
+                <div
+                    style="margin-top: 24px; padding: 16px; background: #f9fafb; border: 1px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5;">
+                    Current user role does not have permission to modify system configuration. Please contact your
+                    administrator.
+                </div>
+
+                <a href="{{ url_for('index') }}" class="btn btn-outline"
+                    style="margin-top: 24px; width: 100%; justify-content: center;">
+                    Return to Dashboard
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section Loader -->
+    <div id="loader" class="loader-overlay section-only">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading Information...</div>
+    </div>
+    </main>
+    </div>
+
+    <!-- BOTTOM NAVIGATION (Mobile Only) -->
+    <nav class="bottom-nav mobile-only">
+        <a href="{{ url_for('index') }}" class="nav-item">
+            <span class="material-icons-round">dashboard</span>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('pumps') }}" class="nav-item">
+            <span class="material-icons-round">water_drop</span>
+            <span>Pumps</span>
+        </a>
+        <a href="{{ url_for('alarms') }}" class="nav-item">
+            <span class="material-icons-round">notifications_active</span>
+            <span>Alerts</span>
+        </a>
+        <a href="{{ url_for('analytics') }}" class="nav-item">
+            <span class="material-icons-round">analytics</span>
+            <span>Stats</span>
+        </a>
+    </nav>
+
+    <script>
+        // LOCK SCREEN LOGIC
+        const CORRECT_PIN = '{{ current_settings.settings_pin }}';
+
+        const content = document.getElementById('settingsContent');
+        const lockScreen = document.getElementById('lockScreen');
+        const pinInput = document.getElementById('manualPinInput');
+        const errorMsg = document.getElementById('pinError');
+        const pinDisplay = document.getElementById('pinDisplay');
+
+        // Initially lock content
+        // CHECK PERSISTENT UNLOCK
+        const isUnlocked = sessionStorage.getItem('settings_unlocked') === 'true';
+
+        if (content) {
+            if (!isUnlocked) {
+                content.classList.add('blur-content');
+            } else {
+                // Already unlocked, hide lock screen
+                if (lockScreen) lockScreen.style.display = 'none';
+            }
+        }
+
+        // Focus input if locked
+        if (pinInput && !isUnlocked) pinInput.focus();
+
+        function checkManualPin() {
+            if (!pinInput) return;
+            const enteredPin = pinInput.value;
+
+            if (enteredPin === CORRECT_PIN) {
+                // Unlock
+                lockScreen.style.opacity = '0';
+                sessionStorage.setItem('settings_unlocked', 'true'); // Persist unlock
+                setTimeout(() => {
+                    lockScreen.style.display = 'none';
+                    content.classList.remove('blur-content');
+                }, 400);
+            } else {
+                // Error
+                errorMsg.style.opacity = '1';
+                pinInput.value = '';
+                pinInput.focus();
+
+                // Shake animation
+                const card = document.querySelector('.lock-card');
+                card.style.transform = 'translateY(-20px) translateX(10px)';
+                setTimeout(() => { card.style.transform = 'translateY(-20px) translateX(-10px)'; }, 50);
+                setTimeout(() => { card.style.transform = 'translateY(-20px) translateX(10px)'; }, 100);
+                setTimeout(() => { card.style.transform = 'translateY(-20px) translateX(0)'; }, 150);
+            }
+        }
+
+        // Enter key support
+        if (pinInput) {
+            pinInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    checkManualPin();
+                }
+            });
+            // Update dots visualization if we want to keep it, or just rely on input masking
+            pinInput.addEventListener('input', function () {
+                errorMsg.style.opacity = '0';
+                // updateDots(this.value.length); // Optional: keep dots synced or remove dots completely
+            });
+        }
+
+        // Remove dots logic entirely or adapt it. 
+        // User asked to remove display, so let's remove the dots container entirely in the HTML too.
+
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader');
+            // Ensure parent is relative
+            loader.parentElement.style.position = 'relative';
+
+            const links = document.querySelectorAll('.sidebar a, .user-dropdown a, a[href^="/"]');
+
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (e.ctrlKey || e.metaKey || link.target === '_blank' || link.getAttribute('href').startsWith('#')) return;
+
+                    // Clear unlock state when navigating away
+                    sessionStorage.removeItem('settings_unlocked');
+
+                    loader.style.display = 'flex';
+                });
+            });
+
+            // Handle Forms in Settings
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', () => {
+                    // Don't show loader for toggle/small actions if preferring speed, 
+                    // but for settings saves it's good feedback.
+                    loader.style.display = 'flex';
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

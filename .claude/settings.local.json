@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File - <<'PSEOF'\nGet-ChildItem 'D:\\\\PROGRAMMING\\\\AONIX PROJECTS\\\\Tata_fire_test\\\\eagle_ai_external_website\\\\templates\\\\*.html' | ForEach-Object {\n    \\(Get-Content $_.FullName -Raw\\) -replace 'mobile_fix_9','mobile_fix_10' | Set-Content $_.FullName -NoNewline\n}\nPSEOF)",
+      "Bash(powershell.exe:*)",
+      "Bash(/tmp/verify_fix.ps1 <<'PSEOF'\n$results9 = Select-String -Path 'D:\\\\PROGRAMMING\\\\AONIX PROJECTS\\\\Tata_fire_test\\\\eagle_ai_external_website\\\\templates\\\\*.html' -Pattern 'mobile_fix_9' -SimpleMatch\n$results10 = Select-String -Path 'D:\\\\PROGRAMMING\\\\AONIX PROJECTS\\\\Tata_fire_test\\\\eagle_ai_external_website\\\\templates\\\\*.html' -Pattern 'mobile_fix_10' -SimpleMatch\nWrite-Output \"Remaining 'mobile_fix_9' occurrences: $\\($results9.Count\\)\"\nWrite-Output \"'mobile_fix_10' occurrences: $\\($results10.Count\\)\"\nWrite-Output \"\"\nWrite-Output \"Files with mobile_fix_10:\"\n$results10 | ForEach-Object { Write-Output \"  $\\($_.Filename\\):$\\($_.LineNumber\\): $\\($_.Line.Trim\\(\\)\\)\" }\nPSEOF)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(/tmp/replace.ps1 << 'PSEOF'\nGet-ChildItem \"D:\\\\PROGRAMMING\\\\AONIX PROJECTS\\\\Tata_fire_test\\\\eagle_ai_external_website\\\\templates\\\\*.html\" | ForEach-Object { \\(Get-Content $_.FullName -Raw\\) -replace 'mobile_fix_11','mobile_fix_12' | Set-Content $_.FullName -NoNewline }\nPSEOF)"
+    ]
+  }
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>EagleAI Battery Calibration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ccc;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        /* Left Panel - Controls */
+        .controls {
+            width: 350px;
+            background: #252525;
+            padding: 20px;
+            border-right: 1px solid #444;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            color: white;
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            background: #333;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+            color: #4ade80;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #4ade80;
+        }
+
+        span.val {
+            font-family: monospace;
+            color: white;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: #111;
+            color: #4ade80;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            resize: none;
+        }
+
+        /* Right Panel - Preview */
+        .preview-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .stage {
+            transform: scale(3);
+            /* Zoom HUGE */
+            border: 1px dashed #555;
+            padding: 20px;
+        }
+
+        /* Overrides for Calibration */
+        .indicator-bar {
+            opacity: 0.8 !important;
+            background: rgba(255, 0, 0, 0.6) !important;
+            /* Red overlay */
+            box-shadow: none !important;
+            border: 1px solid yellow;
+            transition: none !important;
+            /* Instant update */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="controls">
+        <h2>Battery Calibration</h2>
+
+        <div class="control-group">
+            <h3>Global Alignment</h3>
+            <label>Left Position (%) <span class="val" id="val-left">16</span></label>
+            <input type="range" id="left" min="0" max="100" step="0.5" value="16">
+
+            <label>Width (%) <span class="val" id="val-width">13</span></label>
+            <input type="range" id="width" min="5" max="50" step="0.5" value="13">
+
+            <label>Height (%) <span class="val" id="val-height">7</span></label>
+            <input type="range" id="height" min="2" max="20" step="0.5" value="7">
+
+            <label>Skew Y (deg) <span class="val" id="val-skew">12</span></label>
+            <input type="range" id="skew" min="-45" max="45" step="1" value="12">
+        </div>
+
+        <div class="control-group">
+            <h3>Vertical Positions (Top %)</h3>
+            <label>Bar 4 (Top) <span class="val" id="val-t4">48</span></label>
+            <input type="range" id="t4" min="0" max="100" step="0.5" value="48">
+
+            <label>Bar 3 <span class="val" id="val-t3">58</span></label>
+            <input type="range" id="t3" min="0" max="100" step="0.5" value="58">
+
+            <label>Bar 2 <span class="val" id="val-t2">68</span></label>
+            <input type="range" id="t2" min="0" max="100" step="0.5" value="68">
+
+            <label>Bar 1 (Bottom) <span class="val" id="val-t1">78</span></label>
+            <input type="range" id="t1" min="0" max="100" step="0.5" value="78">
+        </div>
+
+        <div class="control-group">
+            <h3>Generated CSS</h3>
+            <textarea id="output" readonly></textarea>
+        </div>
+    </div>
+
+    <div class="preview-area">
+        <div class="stage">
+            <div class="battery-visual-container"
+                style="position: relative; width: 140px; display: flex; justify-content: center;">
+                <img src="{{ url_for('static', filename='images/battery_icon_sleek_empty.png') }}" class="battery-image"
+                    style="width: 140px; height: auto;">
+
+                <div class="battery-indicators-container">
+                    <div class="indicator-bar" id="bar-4"></div>
+                    <div class="indicator-bar" id="bar-3"></div>
+                    <div class="indicator-bar" id="bar-2"></div>
+                    <div class="indicator-bar" id="bar-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inputs = ['left', 'width', 'height', 'skew', 't4', 't3', 't2', 't1'];
+        const settings = {};
+
+        function update() {
+            // Read all inputs
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                settings[id] = el.value;
+                document.getElementById('val-' + id).textContent = el.value;
+            });
+
+            // Apply Common Styles
+            const bars = document.querySelectorAll('.indicator-bar');
+            bars.forEach(b => {
+                b.style.left = settings.left + '%';
+                b.style.width = settings.width + '%';
+                b.style.height = settings.height + '%';
+                b.style.transform = `skewY(${settings.skew}deg)`;
+            });
+
+            // Apply Individual Tops
+            document.getElementById('bar-4').style.top = settings.t4 + '%';
+            document.getElementById('bar-3').style.top = settings.t3 + '%';
+            document.getElementById('bar-2').style.top = settings.t2 + '%';
+            document.getElementById('bar-1').style.top = settings.t1 + '%';
+
+            // Generate CSS Output
+            const css =
+                `.indicator-bar {
+    /* Global Settings */
+    left: ${settings.left}%;
+    width: ${settings.width}%;
+    height: ${settings.height}%;
+    transform: skewY(${settings.skew}deg);
+}
+#bar-4 { top: ${settings.t4}%; }
+#bar-3 { top: ${settings.t3}%; }
+#bar-2 { top: ${settings.t2}%; }
+#bar-1 { top: ${settings.t1}%; }`;
+
+            document.getElementById('output').value = css;
+        }
+
+        // Attach listeners
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', update);
+        });
+
+        // Init
+        update();
+    </script>
+</body>
+
+</html>

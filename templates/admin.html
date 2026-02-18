@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle AI - Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Reusing some main styles but specific for admin table layout */
+        body {
+            background-color: #0b0c10;
+            color: #c5c6c7;
+            font-family: 'Rajdhani', sans-serif;
+            padding: 20px;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1,
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #66fcf1;
+        }
+
+        .card {
+            background: #1f2833;
+            border: 1px solid #45a29e;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #45a29e;
+        }
+
+        th {
+            color: #66fcf1;
+            font-weight: 700;
+        }
+
+        .btn {
+            background: #45a29e;
+            color: #0b0c10;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9em;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #66fcf1;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff4757;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            background: #0b0c10;
+            border: 1px solid #45a29e;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .alert-message {
+            padding: 10px;
+            margin-bottom: 10px;
+            color: white;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            background: #2ecc71;
+        }
+
+        .alert-error {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-container">
+        <div class="header-actions">
+            <h1>SYSTEM ADMINISTRATION</h1>
+            <div>
+                <a href="{{ url_for('index') }}" class="btn">GO TO DASHBOARD</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">LOGOUT</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        {% for category, message in messages %}
+        <div class="alert-message {{ 'alert-success' if category == 'success' else 'alert-error' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <h2>MANAGE USERS</h2>
+            <form action="{{ url_for('admin_add_user') }}" method="POST" style="margin-bottom: 20px;">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <select name="role" required>
+                    <option value="user">Factory User</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <select name="factory_id">
+                    <option value="">-- Assign Factory (Optional for User) --</option>
+                    {% for factory in factories %}
+                    <option value="{{ factory.id }}">{{ factory.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn">CREATE USER</button>
+            </form>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>USERNAME</th>
+                        <th>ROLE</th>
+                        <th>ASSIGNED FACTORY</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>{{ user.factory_name if user.factory_name else 'N/A' }}</td>
+                        <td>
+                            {% if user.username != 'admin' %}
+                            <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" method="POST"
+                                style="display:inline;">
+                                <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('Are you sure?')">DELETE</button>
+                            </form>
+                            {% else %}
+                            <span style="color: #66fcf1;">(System Admin)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>AVAILABLE FACTORIES</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>NAME</th>
+                        <th>FIREBASE URL</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for factory in factories %}
+                    <tr>
+                        <td>{{ factory.id }}</td>
+                        <td>{{ factory.name }}</td>
+                        <td>{{ factory.firebase_url }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_switch_factory', factory_id=factory.id) }}" class="btn">VIEW
+                                DASHBOARD</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div id="loader" class="loader-overlay section-only">
+            <div class="spinner"></div>
+            <div class="loader-text">Loading...</div>
+        </div>
+    </div> <!-- End admin-container -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader');
+            // Ensure parent is relative
+            if (loader.parentElement) loader.parentElement.style.position = 'relative';
+
+            const heavyLinks = document.querySelectorAll('a[href*="/settings"], a[href*="/analytics"], a[href*="/history"], a[href*="/admin/users"], a[href*="/logout"]');
+
+            heavyLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (e.ctrlKey || e.metaKey || link.target === '_blank') return;
+                    loader.style.display = 'flex';
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

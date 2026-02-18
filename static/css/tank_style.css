@@ -1,0 +1,85 @@
+/* --- TANK VISUALIZATION --- */
+.tank-wrapper {
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.tank-visual-container {
+    position: relative;
+    width: 160px;
+    /* Adjust based on image aspect ratio */
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2px;
+}
+
+.tank-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    /* Optional: multiply blend mode if you want it to blend with card bg, 
+       but standard is fine if image has white bg and card has white bg */
+}
+
+.water-level-bar {
+    position: absolute;
+    /* Positioning needs to match the sight glass in the generated image */
+    /* Estimated values - will need tuning */
+    bottom: 23%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6%;
+    /* Relative to container width */
+    height: 0%;
+    /* Dynamic */
+    max-height: 52%;
+    /* The range of the sight glass */
+
+    background: linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%);
+    border-radius: 2px;
+    transition: height 0.5s ease-out;
+    opacity: 0.85;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+    z-index: 2;
+}
+
+.tank-value-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(2px);
+    padding: 4px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    z-index: 10;
+}
+
+.tank-value-overlay #tankValue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    font-feature-settings: "tnum";
+}
+
+.tank-value-overlay .unit {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-left: 2px;
+}
+
+.status-text-centered {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 4px;
+    text-align: center;
+}

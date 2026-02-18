@@ -1,0 +1,57 @@
+# Tasks
+
+- [x] [-] Research current water tank implementation <!-- id: 0 -->
+    - [x] Inspect `templates/index.html`, `static/css/style.css`, and `static/js/dashboard.js` <!-- id: 1 -->
+- [x] [/] Generate industrial water tank image <!-- id: 2 -->
+    - [x] Create realistic tank image (stainless steel or industrial translucent) with clear level indication area <!-- id: 3 -->
+- [x] [/] Implement image-based water level in dashboard <!-- id: 4 -->
+    - [x] Update HTML/CSS to use the new image <!-- id: 5 -->
+    - [x] Adjust JS to animate water level effectively within the image <!-- id: 6 -->
+- [x] [/] Generate industrial water tank image <!-- id: 2 -->
+    - [x] Create realistic tank image (stainless steel or industrial translucent) with clear level indication area <!-- id: 3 -->
+- [x] [/] Implement image-based water level in dashboard <!-- id: 4 -->
+    - [x] Update HTML/CSS to use the new image <!-- id: 5 -->
+    - [x] Adjust JS to animate water level effectively within the image <!-- id: 6 -->
+- [x] [/] Switch to Chrome Tank Theme <!-- id: 8 -->
+    - [x] Generate `water_tank_chrome.png` (Cylindrical, Chrome finish) <!-- id: 9 -->
+    - [x] Update frontend to use new asset and align water bar <!-- id: 10 -->
+- [x] [/] Move water level percentage to bottom of figure <!-- id: 11 -->
+- [x] [/] Update dashboard layout to 4 columns <!-- id: 12 -->
+    - [x] Increase container max-width and decrease grid min-width <!-- id: 13 -->
+- [ ] [/] Remove Baked-in Levels for Additive Style <!-- id: 31 -->
+    - [x] [/] Edit `battery_icon_sleek.png` to make slots dark/empty <!-- id: 32 -->
+    - [x] Switch back to Additive Logic (Green bars on top) <!-- id: 33 -->
+- [x] [/] Calibrate Coordinates <!-- id: 34 -->
+    - [x] Create calibration page <!-- id: 35 -->
+    - [x] Fine-tune CSS coordinates <!-- id: 36 -->
+    - [x] Build interactive slider GUI <!-- id: 40 -->
+- [x] [/] Implement Solid 3D Battery (No Indicators) <!-- id: 41 -->
+    - [x] [/] Generate `battery_icon_sleek_solid.png` (Smooth side) <!-- id: 42 -->
+    - [x] Remove visual indicators from HTML/CSS <!-- id: 43 -->
+    - [x] Remove indicator logic and simulation from JS <!-- id: 44 -->
+- [x] [/] Refine Solid Battery Layout <!-- id: 45 -->
+    - [x] Lower battery voltage text position <!-- id: 46 -->
+    - [x] Shift battery voltage text right 20px <!-- id: 53 -->
+- [x] [/] Implement Battery Fill Visualization <!-- id: 47 -->
+    - [x] Add `battery-level-bar` to HTML <!-- id: 48 -->
+    - [x] Style bar to match 3D perspective in CSS <!-- id: 49 -->
+    - [x] dynamic height logic in JS <!-- id: 50 -->
+- [ ] [/] Fix "Problems Section" (Alerts) <!-- id: 51 -->
+    - [ ] Investigate and restore alert display <!-- id: 52 -->
+- [x] [-] Verify the visual result <!-- id: 7 -->
+- [x] [/] Remove Temporary Simulation <!-- id: 54 -->
+- [x] [/] Clean up CSS Whitespace <!-- id: 55 -->
+- [x] [-] Implement Diesel Level Visualization <!-- id: 56 -->
+    - [x] Generate industrial diesel tank image <!-- id: 57 -->
+    - [x] Update HTML/CSS for diesel visual <!-- id: 58 -->
+- [x] [/] Restore Missing Styles <!-- id: 59 -->
+    - [x] Fix accidental truncation of style.css <!-- id: 60 -->
+- [ ] [-] Design Premium Diesel Icon <!-- id: 61 -->
+    - [x] Generate premium 3D icon (Attempt 1 - Rejected) <!-- id: 62 -->
+    - [x] Generate "Engine Mounted" Industrial Tank Icon (Attempt 2 - Too plastic?) <!-- id: 64 -->
+    - [x] Generate "Metallic Container" Icon (Used 'diesel_icon_premium' - Rejected) <!-- id: 65 -->
+    - [ ] [-] Implement in dashboard <!-- id: 63 -->
+- [ ] [/] Implement Pure CSS Industrial Tank <!-- id: 66 -->
+    - [ ] Create metallic container CSS (gradients, shadows) <!-- id: 67 -->
+    - [ ] Create "Side Wall Leveler" CSS (glass gauge) <!-- id: 68 -->
+    - [ ] Integrate into dashboard <!-- id: 69 -->

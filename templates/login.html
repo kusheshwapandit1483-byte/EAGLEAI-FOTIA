@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle AI - Login</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=mobile_fix_12">
+</head>
+
+<body class="auth-page">
+
+    <div class="auth-card">
+        <div class="auth-header">
+            <!-- Using the same logo as index.html -->
+            <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="auth-logo">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to access the Fire System Dashboard</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div style="margin-bottom: 24px;">
+            {% for message in messages %}
+            <div class="alert-box alert-error"
+                style="border-radius: var(--radius-sm); border: 1px solid #fee2e2; background: #fef2f2;">
+                <span class="auth-label" style="color: var(--accent-red); margin: 0;">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+            <div class="auth-field">
+                <label for="username" class="auth-label">Username</label>
+                <input type="text" id="username" name="username" class="auth-input" placeholder="Enter your username"
+                    required>
+            </div>
+            <div class="auth-field">
+                <label for="password" class="auth-label">Password</label>
+                <div style="position: relative;">
+                    <input type="password" id="password" name="password" class="auth-input"
+                        placeholder="Enter the password" required style="padding-right: 35px;">
+                    <span class="material-icons-round toggle-password" onclick="togglePassword(this)"
+                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; font-size: 1.2rem;">visibility_off</span>
+                </div>
+            </div>
+            <button type="submit" class="auth-btn">Sign In</button>
+            <div class="auth-help-text">
+                Forgot your password? Contact <a href="mailto:admin@aonix.in" class="auth-link">admin@aonix.in</a> to
+                reset it using your verified email.
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            &copy; 2024 EAGLE AI • AONIX
+        </div>
+    </div>
+
+    <div id="loader" class="loader-overlay">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader');
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', () => {
+                    loader.style.display = 'flex';
+                });
+            }
+        });
+
+        function togglePassword(icon) {
+            const container = icon.parentElement;
+            const input = container.querySelector('input');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerText = 'visibility';
+            } else {
+                input.type = 'password';
+                icon.innerText = 'visibility_off';
+            }
+        }
+    </script>
+</body>
+
+</html>
