@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+from datetime import timedelta
 import requests
 import json
 import os
@@ -9,6 +10,7 @@ import time
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'eagle_ai_super_secret_key_8822')
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
 # --- FIREBASE CONFIGURATION ---
 # Default/Fallback URL (can be used for unassigned admins or initial setup)
@@ -107,6 +109,7 @@ def login():
         user = auth_db.verify_user(username, password)
         if user:
             session.clear()
+            session.permanent = True
             session['user_id'] = user.get('id')
             session['username'] = user.get('username')
             session['name'] = user.get('name', user.get('username'))

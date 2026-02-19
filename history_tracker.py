@@ -113,7 +113,7 @@ class HistoryTracker:
 
     def _check_battery(self, data):
         """Checks battery voltage (Range: 11.8 - 14.2)."""
-        volts = float(data.get('batteryVoltage') or data.get('battery_voltage') or 0)
+        volts = float(data.get('batteryVolts') or data.get('batteryVoltage') or data.get('battery_voltage') or 0)
         # Critical if below 11.8 or above 14.2
         current_status = "CRITICAL" if (volts < 11.8 or volts > 14.2) else "NORMAL"
         
@@ -126,9 +126,9 @@ class HistoryTracker:
             self.previous_battery_status = current_status
 
     def _check_pressure(self, data):
-        """Checks system pressure (Threshold: < 6.0 Bar)."""
+        """Checks system pressure (Threshold: < 4.15 kg/cm²)."""
         pressure = float(data.get('pressure') or 0)
-        current_status = "CRITICAL" if pressure < 6.0 else "NORMAL"
+        current_status = "CRITICAL" if pressure < 4.15 else "NORMAL"
         
         if self.previous_pressure_status != current_status:
             if current_status == "CRITICAL":

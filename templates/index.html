@@ -77,7 +77,8 @@
                     </div>
                     <!-- Mobile: Logo + Brand Name -->
                     <div class="mobile-brand mobile-only">
-                        <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI" class="mobile-brand-logo">
+                        <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Eagle AI"
+                            class="mobile-brand-logo">
                         <div class="mobile-brand-text">
                             <span class="mobile-brand-name">EAGLE AI</span>
                             <span class="mobile-brand-sub">FOTIA</span>
@@ -109,8 +110,10 @@
                     </div>
                     <div class="user-dropdown" id="mobileUserDropdown">
                         <div class="user-dropdown-header">
-                            <span class="user-dropdown-name">{{ session.get('name', session.get('username', 'User')) }}</span>
-                            <span style="display:block; font-size: 0.8em; color: var(--text-secondary);">{{ session.get('role', 'Role') }}</span>
+                            <span class="user-dropdown-name">{{ session.get('name', session.get('username', 'User'))
+                                }}</span>
+                            <span style="display:block; font-size: 0.8em; color: var(--text-secondary);">{{
+                                session.get('role', 'Role') }}</span>
                         </div>
                         <a href="{{ url_for('logout') }}" class="user-dropdown-item text-danger">
                             <span class="material-icons-round" style="font-size: 20px;">logout</span>
@@ -188,7 +191,7 @@
 
                     <div class="gauge-wrapper">
                         <div class="gauge-container">
-                            <img src="{{ url_for('static', filename='images/pressure_guage.png') }}" class="gauge-face"
+                            <img src="{{ url_for('static', filename='images/pressure_gauge.png') }}" class="gauge-face"
                                 alt="Pressure Gauge">
                             <div class="gauge-needle" id="pressureNeedle"></div>
                             <div class="gauge-center-cap"></div>

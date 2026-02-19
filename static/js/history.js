@@ -234,8 +234,8 @@ onValue(liveDataRef, (snapshot) => {
 function calculateAlarms(data) {
     let count = 0;
 
-    // 1. Pressure < 6
-    if ((parseFloat(data.pressure) || 0) < 6) count++;
+    // 1. Pressure < 4.15
+    if ((parseFloat(data.pressure) || 0) < 4.15) count++;
 
     // 2-4. Pumps ON
     const pumps = data.pumps || data.Pumps || {};
@@ -262,7 +262,7 @@ function calculateAlarms(data) {
     if (diesel < 95) count++;
 
     // 8. Battery Voltage ( < 11.8 or > 14.2 )
-    const batt = parseFloat(data.batteryVoltage || data.battery_voltage || 0);
+    const batt = parseFloat(data.batteryVolts || data.batteryVoltage || data.battery_voltage || 0);
     if (batt < 11.8 || batt > 14.2) count++;
 
     // Update UI

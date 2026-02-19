@@ -214,7 +214,7 @@
                     <div class="alarm-card" id="card-pressure">
                         <div class="alarm-info">
                             <div class="alarm-title">Fire Hydrant Line Pressure</div>
-                            <div class="alarm-condition">Condition: &lt; 6 kg/cm²</div>
+                            <div class="alarm-condition">Condition: &lt; 4.15 kg/cm²</div>
                             <div class="text-xs text-secondary mt-1">Current: <span id="val-pressure">--</span> kg/cm²
                             </div>
                         </div>
@@ -404,7 +404,7 @@
 
                 // 1. Pressure
                 const pressure = (data.pressure !== undefined) ? data.pressure : (data.Pressure || 0);
-                count += updateStatus('pressure', pressure < 6, pressure);
+                count += updateStatus('pressure', pressure < 4.15, pressure);
 
                 // 2-4. Pumps (Helper to check snake_case, camelCase, and Nested objects)
                 const getPumpStatus = (name) => {
@@ -465,7 +465,8 @@
                 count += updateStatus('diesel-level', dieselLevel < 95, dieselLevel);
 
                 // 8. Battery Voltage
-                const batteryVolts = (data.battery_voltage !== undefined) ? data.battery_voltage :
+                const batteryVolts = (data.batteryVolts !== undefined) ? data.batteryVolts :
+                    (data.battery_voltage !== undefined) ? data.battery_voltage :
                     (data.batteryVoltage !== undefined) ? data.batteryVoltage : 0;
                 // Critical if outside 11.8 - 14.2
                 const batteryCritical = (batteryVolts < 11.8 || batteryVolts > 14.2);
