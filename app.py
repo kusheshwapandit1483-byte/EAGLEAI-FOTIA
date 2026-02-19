@@ -8,8 +8,7 @@ import auth_db
 import time
 
 app = Flask(__name__)
-# KEEP THE KEY SECURE
-app.secret_key = 'eagle_ai_super_secret_key_8822'
+app.secret_key = os.environ.get('SECRET_KEY', 'eagle_ai_super_secret_key_8822')
 
 # --- FIREBASE CONFIGURATION ---
 # Default/Fallback URL (can be used for unassigned admins or initial setup)
@@ -674,12 +673,15 @@ def analytics():
 # ========================================================
 # HISTORY TRACKER INTEGRATION
 # ========================================================
-from history_tracker import HistoryTracker
-tracker = HistoryTracker()
+# History tracker uses background threads which don't work in
+# serverless environments (Vercel). Only start it for local dev.
+IS_SERVERLESS = os.environ.get('VERCEL', False) or os.environ.get('AWS_LAMBDA_FUNCTION_NAME', False)
 
-# In Flask 2.3+, before_first_request is removed.
-# We will start the tracker explicitly in the main block or just rely on global init if needed.
-# For simplicity in this setup:
+if not IS_SERVERLESS:
+    from history_tracker import HistoryTracker
+    tracker = HistoryTracker()
+else:
+    tracker = None
 
 @app.route('/history')
 @login_required
@@ -688,8 +690,8 @@ def history():
     return render_template('history.html')
 
 if __name__ == '__main__':
-    # Start tracker manually
-    if not tracker.running:
+    # Start tracker manually (local dev only)
+    if tracker and not tracker.running:
         tracker.start()
-        
+
     app.run(host='0.0.0.0', port=5000, debug=True)

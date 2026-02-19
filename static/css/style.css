@@ -2800,13 +2800,19 @@ input:checked+.slider:before {
         margin-bottom: 0 !important;
         height: auto !important;
         min-height: 80px;
+        flex-direction: column !important;
+        align-items: center !important;
     }
 
-    /* Overlays */
+    /* Overlays - remove absolute positioning on mobile to prevent overlap */
     .tank-value-overlay,
     .battery-value-overlay {
-        margin-top: 10px !important;
+        position: static !important;
+        transform: none !important;
+        margin-top: 4px !important;
         padding: 2px 8px !important;
+        width: auto !important;
+        justify-content: center !important;
     }
 
     .tank-value-overlay #tankValue,
